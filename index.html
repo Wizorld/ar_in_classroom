@@ -229,15 +229,21 @@
         renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;">
         
         <!-- MAIN MARKER (Hiro Pattern - represents the chemistry apparatus) -->
-        <a-marker 
+       <!-- <a-marker 
             id="mainMarker"
             preset="hiro"
             emitevents="true"
             smooth="true"
             smoothCount="10"
             smoothTolerance="0.01"
-            smoothThreshold="5">
-            
+            smoothThreshold="5"> -->
+            <a-marker 
+            id="mainMarker"
+            type="barcode" 
+            value="0"
+            emitevents="true"
+            smooth="true"
+            smoothCount="8">
             <!-- Main 3D Model Container -->
             <a-entity 
                 id="mainContent"
