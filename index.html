@@ -1,40 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Marker AR Chemistry Education System</title>
-    
+
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
-    
+
     <!-- AR.js with Marker Tracking Support -->
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    
+
     <style>
         .a-canvas {
-    width: 100% !important;
-    height: 100% !important;
-    top: 0 !important;
-    left: 0 !important;
-}
-        
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             overflow: hidden;
         }
-        
+
         #arContainer {
             width: 100%;
             height: 100vh;
         }
-        
+
         #debugPanel {
             position: absolute;
             top: 10px;
@@ -51,7 +52,7 @@
             overflow-y: auto;
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
         }
-        
+
         #statusPanel {
             position: absolute;
             bottom: 10px;
@@ -65,7 +66,7 @@
             z-index: 100;
             box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
         }
-        
+
         .marker-label {
             background: rgba(0, 0, 0, 0.9);
             color: #00ff00;
@@ -75,7 +76,7 @@
             text-align: center;
             min-width: 100px;
         }
-        
+
         #instructionPanel {
             position: absolute;
             top: 10px;
@@ -90,7 +91,7 @@
             z-index: 100;
             box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
         }
-        
+
         .button {
             background: #2196F3;
             color: white;
@@ -102,12 +103,12 @@
             font-size: 12px;
             transition: all 0.3s ease;
         }
-        
+
         .button:hover {
             background: #1976D2;
             transform: scale(1.05);
         }
-        
+
         .button-group {
             position: absolute;
             bottom: 20px;
@@ -117,7 +118,7 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-        
+
         #loadingScreen {
             position: fixed;
             top: 0;
@@ -132,7 +133,7 @@
             flex-direction: column;
             color: white;
         }
-        
+
         .spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
@@ -142,12 +143,17 @@
             animation: spin 1s linear infinite;
             margin-bottom: 20px;
         }
-        
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
-        
+
         .parameter-display {
             background: rgba(0, 0, 0, 0.8);
             color: #00ff00;
@@ -160,6 +166,7 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Loading Screen -->
     <div id="loadingScreen">
@@ -167,13 +174,13 @@
         <h2>Initializing AR Chemistry Lab...</h2>
         <p>Please allow camera access</p>
     </div>
-    
+
     <!-- Debug Panel -->
     <div id="debugPanel">
         <strong>🔍 Debug Info</strong>
         <div id="debugContent"></div>
     </div>
-    
+
     <!-- Instruction Panel -->
     <div id="instructionPanel">
         <strong>📚 AR Chemistry Lab</strong>
@@ -191,10 +198,10 @@
         <hr style="margin: 10px 0; opacity: 0.5;">
         <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.3);">
             <small>Print main marker on 2/3 of A3 sheet<br>
-            Print trump cards on regular paper</small>
+                Print trump cards on regular paper</small>
         </div>
     </div>
-    
+
     <!-- Status Panel -->
     <div id="statusPanel">
         <strong>📊 System Status</strong>
@@ -211,25 +218,21 @@
             Model Rotation: <span id="rotationDisplay">0°</span>
         </div>
     </div>
-    
+
     <!-- Control Buttons -->
     <div class="button-group">
         <button class="button" onclick="toggleDebugMode()">🐛 Toggle Debug</button>
         <button class="button" onclick="resetExperiment()">🔄 Reset</button>
         <button class="button" onclick="downloadMarkers()">📥 Print Markers</button>
     </div>
-    
+
     <!-- A-Frame AR Scene -->
-    <a-scene 
-        id="arScene"
-        embedded 
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65; sourceWidth:1280; sourceHeight:720; 
-          displayWidth: 1280; displayHeight: 720;"
-        vr-mode-ui="enabled: false"
+    <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65; sourceWidth:1280; sourceHeight:720; 
+          displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false"
         renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;">
-        
+
         <!-- MAIN MARKER (Hiro Pattern - represents the chemistry apparatus) -->
-       <!-- <a-marker 
+        <!-- <a-marker 
             id="mainMarker"
             preset="hiro"
             emitevents="true"
@@ -237,262 +240,111 @@
             smoothCount="10"
             smoothTolerance="0.01"
             smoothThreshold="5"> -->
-            <a-marker 
-            id="mainMarker"
-            type="barcode" 
-            value="5"
-            emitevents="true"
-            smooth="true"
-            smoothCount="8">
+        <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
             <!-- Main 3D Model Container -->
-            <a-entity 
-                id="mainContent"
-                position="0 0 0"
-                scale="1 1 1">
-                
+            <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
+
                 <!-- Central Molecule/Apparatus Structure -->
                 <a-entity id="moleculeContainer" position="0 0 0" scale="1 1 1">
                     <!-- Base platform -->
-                    <a-cylinder 
-                        id="basePlatform"
-                        radius="0.3" 
-                        height="0.05" 
-                        color="#333333"
-                        position="0 -0.2 0">
+                    <a-cylinder id="basePlatform" radius="0.3" height="0.05" color="#333333" position="0 -0.2 0">
                     </a-cylinder>
-                    
+
                     <!-- Central container (beaker/flask) -->
-                    <a-cylinder 
-                        id="mainContainer"
-                        radius="0.15" 
-                        height="0.4" 
-                        color="#4CAF50"
-                        opacity="0.7"
+                    <a-cylinder id="mainContainer" radius="0.15" height="0.4" color="#4CAF50" opacity="0.7"
                         position="0 0 0">
                     </a-cylinder>
-                    
+
                     <!-- Liquid inside (will change color based on reactions) -->
-                    <a-cylinder 
-                        id="liquidContent"
-                        radius="0.12" 
-                        height="0.3" 
-                        color="#2196F3"
-                        opacity="0.8"
+                    <a-cylinder id="liquidContent" radius="0.12" height="0.3" color="#2196F3" opacity="0.8"
                         position="0 -0.05 0">
                     </a-cylinder>
-                    
+
                     <!-- Heating element (burner) -->
-                    <a-cone 
-                        id="burner"
-                        radius-bottom="0.12" 
-                        radius-top="0.08" 
-                        height="0.1" 
-                        color="#FF6F00"
-                        opacity="0.6"
-                        position="0 -0.25 0">
+                    <a-cone id="burner" radius-bottom="0.12" radius-top="0.08" height="0.1" color="#FF6F00"
+                        opacity="0.6" position="0 -0.25 0">
                     </a-cone>
-                    
+
                     <!-- Thermometer -->
-                    <a-cylinder 
-                        id="thermometer"
-                        radius="0.02" 
-                        height="0.3" 
-                        color="#FF4444"
-                        position="0.2 0 0">
+                    <a-cylinder id="thermometer" radius="0.02" height="0.3" color="#FF4444" position="0.2 0 0">
                     </a-cylinder>
-                    
+
                     <!-- Stirrer -->
-                    <a-cylinder 
-                        id="stirrer"
-                        radius="0.01" 
-                        height="0.35" 
-                        color="#CCCCCC"
-                        position="-0.15 0 0">
+                    <a-cylinder id="stirrer" radius="0.01" height="0.35" color="#CCCCCC" position="-0.15 0 0">
                     </a-cylinder>
                 </a-entity>
-                
+
                 <!-- Temperature indicator -->
-                <a-text 
-                    id="tempText"
-                    value="25°C" 
-                    color="#FF4444"
-                    position="0 0.35 0"
-                    scale="0.15 0.15 0.15"
+                <a-text id="tempText" value="25°C" color="#FF4444" position="0 0.35 0" scale="0.15 0.15 0.15"
                     align="center">
                 </a-text>
-                
+
                 <!-- Main marker label -->
-                <a-text 
-                    value="Chemistry Lab" 
-                    color="#00FF00"
-                    position="0 -0.45 0"
-                    scale="0.1 0.1 0.1"
-                    align="center">
+                <a-text value="Chemistry Lab" color="#00FF00" position="0 -0.45 0" scale="0.1 0.1 0.1" align="center">
                 </a-text>
             </a-entity>
         </a-marker>
-        
+
         <!-- EVENT MARKER 1: HEAT (Barcode 0) -->
-        <a-marker 
-            id="heatMarker"
-            type="barcode" 
-            value="0"
-            emitevents="true"
-            smooth="true"
-            smoothCount="8">
-            
-            <a-entity 
-                position="0 0 0"
-                scale="0.8 0.8 0.8">
-                
-                <!-- Heat event indicator -->
-                <a-box 
-                    color="#FF5722" 
-                    position="0 0 0"
-                    scale="0.3 0.3 0.3">
-                </a-box>
-                
-                <a-text 
-                    value="🔥 HEAT" 
-                    color="#FFFFFF"
-                    position="0 0.25 0"
-                    scale="0.2 0.2 0.2"
-                    align="center">
+        <a-marker id="heatMarker" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="8">
+
+            <a-entity position="0 0 0" scale="0.5 0.5 0.5">
+
+                <!-- Gas Lighter GLB Model -->
+                <a-entity gltf-model="Assets/Exothermic reaction/gas_lighter.glb" position="0 0 0" rotation="0 0 0">
+                </a-entity>
+
+                <a-text value="🔥 HEAT" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
                 </a-text>
-                
-                <!-- Animated flame -->
-                <a-cone 
-                    id="heatFlame"
-                    radius-bottom="0.1" 
-                    radius-top="0.05" 
-                    height="0.2" 
-                    color="#FFD700"
-                    opacity="0.7"
-                    position="0 0 0">
-                </a-cone>
             </a-entity>
         </a-marker>
-        
+
         <!-- EVENT MARKER 2: STIR (Barcode 1) -->
-        <a-marker 
-            id="stirMarker"
-            type="barcode" 
-            value="1"
-            emitevents="true"
-            smooth="true"
-            smoothCount="8">
-            
-            <a-entity 
-                position="0 0 0"
-                scale="0.8 0.8 0.8">
-                
-                <!-- Stir event indicator -->
-                <a-box 
-                    color="#2196F3" 
-                    position="0 0 0"
-                    scale="0.3 0.3 0.3">
-                </a-box>
-                
-                <a-text 
-                    value="🔄 STIR" 
-                    color="#FFFFFF"
-                    position="0 0.25 0"
-                    scale="0.2 0.2 0.2"
-                    align="center">
+        <a-marker id="stirMarker" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8">
+
+            <a-entity position="0 0 0" scale="0.5 0.5 0.5">
+
+                <!-- Pot GLB Model -->
+                <a-entity gltf-model="Assets/Exothermic reaction/pot.glb" position="0 0 0" rotation="0 0 0">
+                </a-entity>
+
+                <a-text value="🔄 STIR" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
                 </a-text>
-                
-                <!-- Rotation indicator -->
-                <a-torus 
-                    id="stirIndicator"
-                    radius="0.12" 
-                    radius-tubular="0.02"
-                    color="#4CAF50"
-                    position="0 0 0">
-                </a-torus>
             </a-entity>
         </a-marker>
-        
+
         <!-- EVENT MARKER 3: REAGENT (Barcode 2) -->
-        <a-marker 
-            id="reagentMarker"
-            type="barcode" 
-            value="2"
-            emitevents="true"
-            smooth="true"
-            smoothCount="8">
-            
-            <a-entity 
-                position="0 0 0"
-                scale="0.8 0.8 0.8">
-                
-                <!-- Reagent event indicator -->
-                <a-box 
-                    color="#9C27B0" 
-                    position="0 0 0"
-                    scale="0.3 0.3 0.3">
-                </a-box>
-                
-                <a-text 
-                    value="🧬 REAGENT" 
-                    color="#FFFFFF"
-                    position="0 0.25 0"
-                    scale="0.15 0.15 0.15"
-                    align="center">
+        <a-marker id="reagentMarker" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8">
+
+            <a-entity position="0 0 0" scale="0.5 0.5 0.5">
+
+                <!-- Sand Box GLB Model -->
+                <a-entity gltf-model="Assets/Exothermic reaction/sand_box.glb" position="0 0 0" rotation="0 0 0">
+                </a-entity>
+
+                <a-text value="🧬 REAGENT" color="#FFFFFF" position="0 0.5 0" scale="0.15 0.15 0.15" align="center">
                 </a-text>
-                
-                <!-- Liquid drop -->
-                <a-sphere 
-                    id="reagentDrop"
-                    radius="0.08"
-                    color="#FF1744"
-                    position="0 0 0">
-                </a-sphere>
             </a-entity>
         </a-marker>
-        
+
         <!-- EVENT MARKER 4: COOL (Barcode 3) -->
-        <a-marker 
-            id="coolMarker"
-            type="barcode" 
-            value="3"
-            emitevents="true"
-            smooth="true"
-            smoothCount="8">
-            
-            <a-entity 
-                position="0 0 0"
-                scale="0.8 0.8 0.8">
-                
-                <!-- Cool event indicator -->
-                <a-box 
-                    color="#00BCD4" 
-                    position="0 0 0"
-                    scale="0.3 0.3 0.3">
-                </a-box>
-                
-                <a-text 
-                    value="❄️ COOL" 
-                    color="#FFFFFF"
-                    position="0 0.25 0"
-                    scale="0.2 0.2 0.2"
-                    align="center">
+        <a-marker id="coolMarker" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="8">
+
+            <a-entity position="0 0 0" scale="0.5 0.5 0.5">
+
+                <!-- Tripod Stand GLB Model -->
+                <a-entity gltf-model="Assets/Exothermic reaction/tripod_stand.glb" position="0 0 0" rotation="0 0 0">
+                </a-entity>
+
+                <a-text value="❄️ COOL" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
                 </a-text>
-                
-                <!-- Ice crystals -->
-                <a-box 
-                    id="iceCrystal"
-                    color="#E0F7FA"
-                    opacity="0.6"
-                    position="0 0 0"
-                    scale="0.12 0.12 0.12">
-                </a-box>
             </a-entity>
         </a-marker>
-        
+
         <!-- Camera -->
         <a-entity camera></a-entity>
     </a-scene>
-    
+
     <script>
         // ============================================
         // STATE MANAGEMENT
@@ -506,13 +358,13 @@
             liquidColor: '#2196F3',
             containerColor: '#4CAF50'
         };
-        
+
         // ============================================
         // INITIALIZATION
         // ============================================
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 AR Chemistry Lab Initializing...');
-            
+
             // Hide loading screen after AR scene loads
             const scene = document.getElementById('arScene');
             scene.addEventListener('loaded', () => {
@@ -520,17 +372,17 @@
                     document.getElementById('loadingScreen').style.display = 'none';
                 }, 2000);
             });
-            
+
             // Setup marker event listeners
             setupMarkerEventListeners();
-            
+
             // Start animation loop
             animationLoop();
-            
+
             // Update debug info
             updateDebugInfo();
         });
-        
+
         // ============================================
         // MARKER EVENT SETUP
         // ============================================
@@ -547,7 +399,7 @@
                 document.getElementById('mainMarkerStatus').textContent = 'Not Detected';
                 updateDebugInfo();
             });
-            
+
             // Heat marker events
             const heatMarker = document.getElementById('heatMarker');
             heatMarker.addEventListener('markerFound', () => {
@@ -558,7 +410,7 @@
                 console.log('Heat marker lost');
                 deactivateHeatEvent();
             });
-            
+
             // Stir marker events
             const stirMarker = document.getElementById('stirMarker');
             stirMarker.addEventListener('markerFound', () => {
@@ -569,7 +421,7 @@
                 console.log('Stir marker lost');
                 deactivateStirEvent();
             });
-            
+
             // Reagent marker events
             const reagentMarker = document.getElementById('reagentMarker');
             reagentMarker.addEventListener('markerFound', () => {
@@ -579,7 +431,7 @@
             reagentMarker.addEventListener('markerLost', () => {
                 console.log('Reagent marker lost');
             });
-            
+
             // Cool marker events
             const coolMarker = document.getElementById('coolMarker');
             coolMarker.addEventListener('markerFound', () => {
@@ -590,7 +442,7 @@
                 console.log('Cool marker lost');
             });
         }
-        
+
         // ============================================
         // EVENT HANDLERS
         // ============================================
@@ -600,67 +452,67 @@
             document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
             console.log('🔥 Heating started - Temperature increasing');
         }
-        
+
         function deactivateHeatEvent() {
             experimentState.isHeating = false;
             experimentState.activeMarkers.delete('heat');
             document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
             console.log('🔥 Heating stopped');
         }
-        
+
         function activateStirEvent() {
             experimentState.isStirring = true;
             experimentState.activeMarkers.add('stir');
             document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
             console.log('🔄 Stirring started');
         }
-        
+
         function deactivateStirEvent() {
             experimentState.isStirring = false;
             experimentState.activeMarkers.delete('stir');
             document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
             console.log('🔄 Stirring stopped');
         }
-        
+
         function activateReagentEvent() {
             experimentState.activeMarkers.add('reagent');
             document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
-            
+
             // Change liquid color (simulate reaction)
             const colors = ['#FF1744', '#FF5722', '#FFD700', '#4CAF50', '#2196F3'];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
             experimentState.liquidColor = randomColor;
-            
+
             const liquid = document.getElementById('liquidContent');
             if (liquid) {
                 liquid.setAttribute('color', randomColor);
             }
-            
+
             console.log('🧬 Reagent added - Color changed to', randomColor);
-            
+
             // Remove from active after animation
             setTimeout(() => {
                 experimentState.activeMarkers.delete('reagent');
                 document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
             }, 2000);
         }
-        
+
         function activateCoolEvent() {
             experimentState.activeMarkers.add('cool');
             document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
-            
+
             // Reset temperature
             experimentState.temperature = 25;
             experimentState.isHeating = false;
-            
+
             console.log('❄️ Cooling started - Temperature reset to 25°C');
-            
+
             setTimeout(() => {
                 experimentState.activeMarkers.delete('cool');
                 document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
             }, 2000);
         }
-        
+
         // ============================================
         // ANIMATION LOOP
         // ============================================
@@ -671,7 +523,7 @@
             } else if (experimentState.temperature > 25) {
                 experimentState.temperature = Math.max(experimentState.temperature - 1, 25);
             }
-            
+
             // Update burner color based on temperature
             const burner = document.getElementById('burner');
             if (burner) {
@@ -680,29 +532,29 @@
                     burner.setAttribute('opacity', 0.3 + heat * 0.6);
                 }
             }
-            
+
             // Update temperature display
             document.getElementById('tempText').setAttribute('value', Math.round(experimentState.temperature) + '°C');
             document.getElementById('tempDisplay').textContent = Math.round(experimentState.temperature) + '°C';
-            
+
             // Update stirring rotation
             if (experimentState.isStirring) {
                 experimentState.modelRotation = (experimentState.modelRotation + 4) % 360;
-                
+
                 const moleculeContainer = document.getElementById('moleculeContainer');
                 if (moleculeContainer) {
                     moleculeContainer.setAttribute('rotation', `0 ${experimentState.modelRotation} 0`);
                 }
-                
+
                 // Rotate stirrer
                 const stirrer = document.getElementById('stirrer');
                 if (stirrer) {
                     stirrer.setAttribute('rotation', `0 ${experimentState.modelRotation} 0`);
                 }
             }
-            
+
             document.getElementById('rotationDisplay').textContent = Math.round(experimentState.modelRotation) + '°';
-            
+
             // Animate heat flame
             if (experimentState.isHeating) {
                 const flame = document.getElementById('heatFlame');
@@ -711,11 +563,11 @@
                     flame.setAttribute('scale', `${scale} ${scale * 1.5} ${scale}`);
                 }
             }
-            
+
             updateDebugInfo();
             requestAnimationFrame(animationLoop);
         }
-        
+
         // ============================================
         // UI UTILITIES
         // ============================================
@@ -732,12 +584,12 @@
                 </div>
             `;
         }
-        
+
         function toggleDebugMode() {
             const debugPanel = document.getElementById('debugPanel');
             debugPanel.style.display = debugPanel.style.display === 'none' ? 'block' : 'none';
         }
-        
+
         function resetExperiment() {
             experimentState.temperature = 25;
             experimentState.isHeating = false;
@@ -745,24 +597,24 @@
             experimentState.modelRotation = 0;
             experimentState.activeMarkers.clear();
             experimentState.liquidColor = '#2196F3';
-            
+
             const liquid = document.getElementById('liquidContent');
             if (liquid) {
                 liquid.setAttribute('color', '#2196F3');
             }
-            
+
             const moleculeContainer = document.getElementById('moleculeContainer');
             if (moleculeContainer) {
                 moleculeContainer.setAttribute('rotation', '0 0 0');
             }
-            
+
             document.getElementById('activeEventsCount').textContent = '0';
             document.getElementById('tempDisplay').textContent = '25°C';
             document.getElementById('rotationDisplay').textContent = '0°';
-            
+
             console.log('🔄 Experiment reset');
         }
-        
+
         function downloadMarkers() {
             alert(`📥 Marker Generation Guide:
 
@@ -793,4 +645,5 @@ Tips:
         }
     </script>
 </body>
+
 </html>
