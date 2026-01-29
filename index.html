@@ -53,107 +53,6 @@
             box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
         }
 
-        #statusPanel {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            color: #ffffff;
-            padding: 15px;
-            border-radius: 8px;
-            font-size: 14px;
-            max-width: 350px;
-            z-index: 100;
-            box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
-        }
-
-        .marker-label {
-            background: rgba(0, 0, 0, 0.9);
-            color: #00ff00;
-            padding: 8px 12px;
-            border-radius: 5px;
-            font-size: 12px;
-            text-align: center;
-            min-width: 100px;
-        }
-
-        #instructionPanel {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(33, 150, 243, 0.95);
-            color: white;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 350px;
-            font-size: 13px;
-            line-height: 1.6;
-            z-index: 100;
-            box-shadow: 0 0 15px rgba(33, 150, 243, 0.5);
-        }
-
-        .button {
-            background: #2196F3;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .button:hover {
-            background: #1976D2;
-            transform: scale(1.05);
-        }
-
-        .button-group {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            z-index: 100;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        #loadingScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            flex-direction: column;
-            color: white;
-        }
-
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top: 4px solid white;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
         .parameter-display {
             background: rgba(0, 0, 0, 0.8);
             color: #00ff00;
@@ -181,51 +80,6 @@
         <div id="debugContent"></div>
     </div>
 
-    <!-- Instruction Panel -->
-    <div id="instructionPanel">
-        <strong>📚 AR Chemistry Lab</strong>
-        <p style="margin-top: 10px; font-size: 12px;">
-            <strong>Main Marker (Large):</strong> Chemistry experiment setup<br>
-            <strong>Trump Cards:</strong> Event triggers
-        </p>
-        <hr style="margin: 10px 0; opacity: 0.5;">
-        <p style="font-size: 11px;">
-            <strong>🔥 HEAT Card:</strong> Activate burner (heats molecule)<br>
-            <strong>🔄 STIR Card:</strong> Rotate model<br>
-            <strong>🧬 REAGENT Card:</strong> Change color/structure<br>
-            <strong>❄️ COOL Card:</strong> Reset temperature
-        </p>
-        <hr style="margin: 10px 0; opacity: 0.5;">
-        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.3);">
-            <small>Print main marker on 2/3 of A3 sheet<br>
-                Print trump cards on regular paper</small>
-        </div>
-    </div>
-
-    <!-- Status Panel -->
-    <div id="statusPanel">
-        <strong>📊 System Status</strong>
-        <div class="parameter-display">
-            Main Marker: <span id="mainMarkerStatus">Not Detected</span>
-        </div>
-        <div class="parameter-display">
-            Active Events: <span id="activeEventsCount">0</span>
-        </div>
-        <div class="parameter-display">
-            Temperature: <span id="tempDisplay">25°C</span>
-        </div>
-        <div class="parameter-display">
-            Model Rotation: <span id="rotationDisplay">0°</span>
-        </div>
-    </div>
-
-    <!-- Control Buttons -->
-    <div class="button-group">
-        <button class="button" onclick="toggleDebugMode()">🐛 Toggle Debug</button>
-        <button class="button" onclick="resetExperiment()">🔄 Reset</button>
-        <button class="button" onclick="downloadMarkers()">📥 Print Markers</button>
-    </div>
-
     <!-- A-Frame AR Scene -->
     <a-scene id="arScene" embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65; sourceWidth:1280; sourceHeight:720; 
           displayWidth: 1280; displayHeight: 720;" vr-mode-ui="enabled: false"
@@ -241,11 +95,25 @@
             smoothTolerance="0.01"
             smoothThreshold="5"> -->
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
+            <!-- Collider Area (Transparent green sphere for debugging) -->
+            <a-sphere id="collider" radius="1.5" color="#00FF00" opacity="0.2" wireframe="false" position="0 0 0">
+            </a-sphere>
+
             <!-- Main 3D Model Container -->
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
 
-                <!-- Central Molecule/Apparatus Structure -->
-                <a-entity id="moleculeContainer" position="0 0 0" scale="1 1 1">
+                <!-- Tripod Stand (Snapped) -->
+                <a-entity id="snappedStand" visible="false" scale="5 5 5" position="0 -0.5 0">
+                    <a-entity gltf-model="Assets/Exothermic reaction/tripod_stand.glb"></a-entity>
+                </a-entity>
+
+                <!-- Pot (Snapped on top of stand) -->
+                <a-entity id="snappedPot" visible="false" scale="0.001 0.001 0.001" position="0 0.1 0">
+                    <a-entity gltf-model="Assets/Exothermic reaction/pot.glb"></a-entity>
+                </a-entity>
+
+                <!-- Central Molecule/Apparatus Structure (Original models, can be hidden if needed) -->
+                <a-entity id="moleculeContainer" position="0 0.8 0" scale="1 1 1">
                     <!-- Base platform -->
                     <a-cylinder id="basePlatform" radius="0.3" height="0.05" color="#333333" position="0 -0.2 0">
                     </a-cylinder>
@@ -275,7 +143,7 @@
                 </a-entity>
 
                 <!-- Temperature indicator -->
-                <a-text id="tempText" value="25°C" color="#FF4444" position="0 0.35 0" scale="0.15 0.15 0.15"
+                <a-text id="tempText" value="25°C" color="#FF4444" position="0 1.25 0" scale="0.15 0.15 0.15"
                     align="center">
                 </a-text>
 
@@ -299,22 +167,22 @@
             </a-entity>
         </a-marker>
 
-        <!-- EVENT MARKER 2: STIR (Barcode 1) -->
-        <a-marker id="stirMarker" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8">
+        <!-- EVENT MARKER 2: POT (Barcode 1) -->
+        <a-marker id="potMarker" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8">
 
-            <a-entity position="0 0 0" scale="0.001 0.001 0.001">
+            <a-entity id="potOriginalModel" position="0 0 0" scale="0.001 0.001 0.001">
 
                 <!-- Pot GLB Model -->
                 <a-entity gltf-model="Assets/Exothermic reaction/pot.glb" position="0 0 0" rotation="0 0 0">
                 </a-entity>
 
-                <a-text value="🔄 STIR" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
+                <a-text value="POT" color="#FFFFFF" position="0 0.5 0" scale="300 300 300" align="center">
                 </a-text>
             </a-entity>
         </a-marker>
 
         <!-- EVENT MARKER 3: REAGENT (Barcode 2) -->
-        <a-marker id="reagentMarker" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8">
+        <a-marker id="sandBoxMarker" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8">
 
             <a-entity position="0 0 0" scale="5 5 5">
 
@@ -327,16 +195,16 @@
             </a-entity>
         </a-marker>
 
-        <!-- EVENT MARKER 4: COOL (Barcode 3) -->
-        <a-marker id="coolMarker" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="8">
+        <!-- EVENT MARKER 4: TRIPOD STAND (Barcode 3) -->
+        <a-marker id="tripodStandMarker" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="8">
 
-            <a-entity position="0 0 0" scale="5 5 5">
+            <a-entity id="standOriginalModel" position="0 0 0" scale="5 5 5">
 
                 <!-- Tripod Stand GLB Model -->
                 <a-entity gltf-model="Assets/Exothermic reaction/tripod_stand.glb" position="0 0 0" rotation="0 0 0">
                 </a-entity>
 
-                <a-text value="❄️ COOL" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
+                <a-text value="TRIPOD" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
                 </a-text>
             </a-entity>
         </a-marker>
@@ -356,7 +224,10 @@
             modelRotation: 0,
             activeMarkers: new Set(),
             liquidColor: '#2196F3',
-            containerColor: '#4CAF50'
+            containerColor: '#4CAF50',
+            isStandAttached: false,
+            isPotAttached: false,
+            proximityThreshold: 1.5 // Distance threshold for snapping
         };
 
         // ============================================
@@ -391,12 +262,12 @@
             const mainMarker = document.getElementById('mainMarker');
             mainMarker.addEventListener('markerFound', () => {
                 console.log('✅ Main marker detected');
-                document.getElementById('mainMarkerStatus').textContent = 'DETECTED ✓';
+                experimentState.activeMarkers.add('main');
                 updateDebugInfo();
             });
             mainMarker.addEventListener('markerLost', () => {
                 console.log('❌ Main marker lost');
-                document.getElementById('mainMarkerStatus').textContent = 'Not Detected';
+                experimentState.activeMarkers.delete('main');
                 updateDebugInfo();
             });
 
@@ -411,35 +282,42 @@
                 deactivateHeatEvent();
             });
 
-            // Stir marker events
-            const stirMarker = document.getElementById('stirMarker');
-            stirMarker.addEventListener('markerFound', () => {
-                console.log('🔄 Stir marker detected - Starting rotation');
-                activateStirEvent();
+            // Pot marker events
+            const potMarker = document.getElementById('potMarker');
+            potMarker.addEventListener('markerFound', () => {
+                console.log('Pot marker detected');
+                experimentState.activeMarkers.add('pot');
+                updateDebugInfo();
             });
-            stirMarker.addEventListener('markerLost', () => {
-                console.log('Stir marker lost');
-                deactivateStirEvent();
+            potMarker.addEventListener('markerLost', () => {
+                console.log('Pot marker lost');
+                experimentState.activeMarkers.delete('pot');
+                updateDebugInfo();
             });
 
             // Reagent marker events
-            const reagentMarker = document.getElementById('reagentMarker');
-            reagentMarker.addEventListener('markerFound', () => {
+            const sandBoxMarker = document.getElementById('sandBoxMarker');
+            sandBoxMarker.addEventListener('markerFound', () => {
                 console.log('🧬 Reagent marker detected - Adding reagent');
+                experimentState.activeMarkers.add('reagent');
                 activateReagentEvent();
             });
-            reagentMarker.addEventListener('markerLost', () => {
+            sandBoxMarker.addEventListener('markerLost', () => {
                 console.log('Reagent marker lost');
+                experimentState.activeMarkers.delete('reagent');
             });
 
-            // Cool marker events
-            const coolMarker = document.getElementById('coolMarker');
-            coolMarker.addEventListener('markerFound', () => {
-                console.log('❄️ Cool marker detected - Cooling down');
-                activateCoolEvent();
+            // Tripod marker events
+            const tripodStandMarker = document.getElementById('tripodStandMarker');
+            tripodStandMarker.addEventListener('markerFound', () => {
+                console.log('Tripod marker detected');
+                experimentState.activeMarkers.add('stand');
+                updateDebugInfo();
             });
-            coolMarker.addEventListener('markerLost', () => {
-                console.log('Cool marker lost');
+            tripodStandMarker.addEventListener('markerLost', () => {
+                console.log('Tripod marker lost');
+                experimentState.activeMarkers.delete('stand');
+                updateDebugInfo();
             });
         }
 
@@ -475,9 +353,6 @@
         }
 
         function activateReagentEvent() {
-            experimentState.activeMarkers.add('reagent');
-            document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
-
             // Change liquid color (simulate reaction)
             const colors = ['#FF1744', '#FF5722', '#FFD700', '#4CAF50', '#2196F3'];
             const randomColor = colors[Math.floor(Math.random() * colors.length)];
@@ -489,34 +364,50 @@
             }
 
             console.log('🧬 Reagent added - Color changed to', randomColor);
-
-            // Remove from active after animation
-            setTimeout(() => {
-                experimentState.activeMarkers.delete('reagent');
-                document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
-            }, 2000);
-        }
-
-        function activateCoolEvent() {
-            experimentState.activeMarkers.add('cool');
-            document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
-
-            // Reset temperature
-            experimentState.temperature = 25;
-            experimentState.isHeating = false;
-
-            console.log('❄️ Cooling started - Temperature reset to 25°C');
-
-            setTimeout(() => {
-                experimentState.activeMarkers.delete('cool');
-                document.getElementById('activeEventsCount').textContent = experimentState.activeMarkers.size;
-            }, 2000);
         }
 
         // ============================================
         // ANIMATION LOOP
         // ============================================
         function animationLoop() {
+            const mainMarker = document.getElementById('mainMarker');
+            const standMarker = document.getElementById('tripodStandMarker');
+            const potMarker = document.getElementById('potMarker');
+
+            // 1. Proximity Check
+            if (experimentState.activeMarkers.has('main')) {
+                const mainPos = new THREE.Vector3();
+                mainMarker.object3D.getWorldPosition(mainPos);
+
+                // Check Stand proximity
+                if (experimentState.activeMarkers.has('stand') && !experimentState.isStandAttached) {
+                    const standPos = new THREE.Vector3();
+                    standMarker.object3D.getWorldPosition(standPos);
+                    const dist = mainPos.distanceTo(standPos);
+
+                    if (dist < experimentState.proximityThreshold) {
+                        console.log('🧲 Stand Snapped!');
+                        experimentState.isStandAttached = true;
+                        document.getElementById('snappedStand').setAttribute('visible', 'true');
+                        document.getElementById('standOriginalModel').setAttribute('visible', 'false');
+                    }
+                }
+
+                // Check Pot proximity (requires stand to be attached)
+                if (experimentState.activeMarkers.has('pot') && experimentState.isStandAttached && !experimentState.isPotAttached) {
+                    const potPos = new THREE.Vector3();
+                    potMarker.object3D.getWorldPosition(potPos);
+                    const dist = mainPos.distanceTo(potPos);
+
+                    if (dist < experimentState.proximityThreshold) {
+                        console.log('🧲 Pot Snapped!');
+                        experimentState.isPotAttached = true;
+                        document.getElementById('snappedPot').setAttribute('visible', 'true');
+                        document.getElementById('potOriginalModel').setAttribute('visible', 'false');
+                    }
+                }
+            }
+
             // Update temperature when heating
             if (experimentState.isHeating) {
                 experimentState.temperature = Math.min(experimentState.temperature + 2, 100);
@@ -535,7 +426,6 @@
 
             // Update temperature display
             document.getElementById('tempText').setAttribute('value', Math.round(experimentState.temperature) + '°C');
-            document.getElementById('tempDisplay').textContent = Math.round(experimentState.temperature) + '°C';
 
             // Update stirring rotation
             if (experimentState.isStirring) {
@@ -553,17 +443,6 @@
                 }
             }
 
-            document.getElementById('rotationDisplay').textContent = Math.round(experimentState.modelRotation) + '°';
-
-            // Animate heat flame
-            if (experimentState.isHeating) {
-                const flame = document.getElementById('heatFlame');
-                if (flame) {
-                    const scale = 0.15 + Math.sin(Date.now() * 0.005) * 0.08;
-                    flame.setAttribute('scale', `${scale} ${scale * 1.5} ${scale}`);
-                }
-            }
-
             updateDebugInfo();
             requestAnimationFrame(animationLoop);
         }
@@ -575,12 +454,13 @@
             const debugContent = document.getElementById('debugContent');
             debugContent.innerHTML = `
                 <div style="margin-top: 8px;">
+                    <div style="margin: 4px 0;">Main Marker: ${experimentState.activeMarkers.has('main') ? '✅' : '❌'}</div>
+                    <div style="margin: 4px 0;">Stand Attached: ${experimentState.isStandAttached ? '✅' : '❌'}</div>
+                    <div style="margin: 4px 0;">Pot Attached: ${experimentState.isPotAttached ? '✅' : '❌'}</div>
+                    <hr style="margin: 5px 0; opacity: 0.3;">
                     <div style="margin: 4px 0;">Temperature: ${Math.round(experimentState.temperature)}°C</div>
-                    <div style="margin: 4px 0;">Heating: ${experimentState.isHeating ? '✓ ON' : '✗ OFF'}</div>
-                    <div style="margin: 4px 0;">Stirring: ${experimentState.isStirring ? '✓ ON' : '✗ OFF'}</div>
                     <div style="margin: 4px 0;">Rotation: ${Math.round(experimentState.modelRotation)}°</div>
-                    <div style="margin: 4px 0;">Active Markers: ${experimentState.activeMarkers.size}</div>
-                    <div style="margin: 4px 0;">Liquid Color: <span style="color: ${experimentState.liquidColor};">●</span></div>
+                    <div style="margin: 4px 0;">Active Markers: ${Array.from(experimentState.activeMarkers).join(', ')}</div>
                 </div>
             `;
         }
