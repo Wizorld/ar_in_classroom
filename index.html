@@ -383,9 +383,15 @@
                 if (experimentState.activeMarkers.has('stand') && !experimentState.isStandAttached) {
                     const standPos = new THREE.Vector3();
                     standMarker.object3D.getWorldPosition(standPos);
-                    const dist = mainPos.distanceTo(standPos);
 
-                    if (dist < experimentState.proximityThreshold) {
+                    // 2D distance calculation (ignore Y/height differences)
+                    const dx = mainPos.x - standPos.x;
+                    const dz = mainPos.z - standPos.z;
+                    const dist2D = Math.sqrt(dx * dx + dz * dz);
+
+                    experimentState.lastStandDist = dist2D; // For debug display
+
+                    if (dist2D < experimentState.proximityThreshold) {
                         console.log('🧲 Stand Snapped!');
                         experimentState.isStandAttached = true;
                         document.getElementById('snappedStand').setAttribute('visible', 'true');
@@ -397,9 +403,15 @@
                 if (experimentState.activeMarkers.has('pot') && experimentState.isStandAttached && !experimentState.isPotAttached) {
                     const potPos = new THREE.Vector3();
                     potMarker.object3D.getWorldPosition(potPos);
-                    const dist = mainPos.distanceTo(potPos);
 
-                    if (dist < experimentState.proximityThreshold) {
+                    // 2D distance calculation
+                    const dx = mainPos.x - potPos.x;
+                    const dz = mainPos.z - potPos.z;
+                    const dist2D = Math.sqrt(dx * dx + dz * dz);
+
+                    experimentState.lastPotDist = dist2D; // For debug display
+
+                    if (dist2D < experimentState.proximityThreshold) {
                         console.log('🧲 Pot Snapped!');
                         experimentState.isPotAttached = true;
                         document.getElementById('snappedPot').setAttribute('visible', 'true');
@@ -452,15 +464,18 @@
         // ============================================
         function updateDebugInfo() {
             const debugContent = document.getElementById('debugContent');
+            const standDist = experimentState.lastStandDist ? experimentState.lastStandDist.toFixed(2) : '--';
+            const potDist = experimentState.lastPotDist ? experimentState.lastPotDist.toFixed(2) : '--';
+
             debugContent.innerHTML = `
                 <div style="margin-top: 8px;">
                     <div style="margin: 4px 0;">Main Marker: ${experimentState.activeMarkers.has('main') ? '✅' : '❌'}</div>
-                    <div style="margin: 4px 0;">Stand Attached: ${experimentState.isStandAttached ? '✅' : '❌'}</div>
-                    <div style="margin: 4px 0;">Pot Attached: ${experimentState.isPotAttached ? '✅' : '❌'}</div>
+                    <div style="margin: 4px 0;">Stand Attached: ${experimentState.isStandAttached ? '✅' : '❌'} (Dist: ${standDist})</div>
+                    <div style="margin: 4px 0;">Pot Attached: ${experimentState.isPotAttached ? '✅' : '❌'} (Dist: ${potDist})</div>
                     <hr style="margin: 5px 0; opacity: 0.3;">
+                    <div style="margin: 4px 0;">Threshold: ${experimentState.proximityThreshold} Units</div>
                     <div style="margin: 4px 0;">Temperature: ${Math.round(experimentState.temperature)}°C</div>
-                    <div style="margin: 4px 0;">Rotation: ${Math.round(experimentState.modelRotation)}°</div>
-                    <div style="margin: 4px 0;">Active Markers: ${Array.from(experimentState.activeMarkers).join(', ')}</div>
+                    <div style="margin: 4px 0;">Active: ${Array.from(experimentState.activeMarkers).join(', ')}</div>
                 </div>
             `;
         }
