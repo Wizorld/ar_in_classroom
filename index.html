@@ -96,8 +96,8 @@
             smoothThreshold="5"> -->
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
             <!-- Collider Area (Transparent green sphere for debugging) -->
-            <a-sphere id="collider" radius="0.5" color="#00FF00" opacity="0.2" wireframe="false" position="0 0 0">
-            </a-sphere>
+            <a-box id="collider" radius="0.5" color="#00FF00" opacity="0.2" wireframe="true" position="0 0 0">
+            </a-box>
 
             <!-- Main 3D Model Container -->
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
@@ -227,7 +227,7 @@
             containerColor: '#4CAF50',
             isStandAttached: false,
             isPotAttached: false,
-            proximityThreshold: 0.6 // Distance threshold for snapping
+            proximityThreshold: 1.0 // Distance threshold for snapping
         };
 
         // ============================================
