@@ -96,10 +96,10 @@
             smoothThreshold="5"> -->
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
             <!-- Collider Area (Transparent green box for debugging) -->
-            <a-box id="collider" width="1" height="1" depth="1" color="#00FF00" opacity="0.2" wireframe="true"
+            <!--  <a-box id="collider" width="1" height="1" depth="1" color="#00FF00" opacity="0.2" wireframe="true"
                 position="0 0 0">
             </a-box>
-
+        -->
             <!-- Main 3D Model Container -->
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
 
@@ -114,12 +114,12 @@
                 </a-entity>
 
                 <!-- Central Molecule/Apparatus Structure (Original models, can be hidden if needed) -->
-                <a-entity id="moleculeContainer" position="0 0.8 0" scale="1 1 1">
+                <a-entity id="moleculeContainer" position="0 0.8 0" scale="1 1 1" visible="false">
                     <!-- Base platform -->
                     <a-cylinder id="basePlatform" radius="0.3" height="0.05" color="#333333" position="0 -0.2 0">
                     </a-cylinder>
 
-                    <!-- Central container (beaker/flask) -->
+                    <!-- Central container (beaker/flask)  -->
                     <a-cylinder id="mainContainer" radius="0.15" height="0.4" color="#4CAF50" opacity="0.7"
                         position="0 0 0">
                     </a-cylinder>
