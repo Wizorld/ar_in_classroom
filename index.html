@@ -95,8 +95,9 @@
             smoothTolerance="0.01"
             smoothThreshold="5"> -->
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
-            <!-- Collider Area (Transparent green sphere for debugging) -->
-            <a-box id="collider" radius="0.5" color="#00FF00" opacity="0.2" wireframe="true" position="0 0 0">
+            <!-- Collider Area (Transparent green box for debugging) -->
+            <a-box id="collider" width="2" height="2" depth="2" color="#00FF00" opacity="0.2" wireframe="true"
+                position="0 0 0">
             </a-box>
 
             <!-- Main 3D Model Container -->
@@ -378,18 +379,24 @@
             if (experimentState.activeMarkers.has('main')) {
                 const mainPos = new THREE.Vector3();
                 mainMarker.object3D.getWorldPosition(mainPos);
+                experimentState.mainPos = mainPos; // Save for debug
 
                 // Check Stand proximity
                 if (experimentState.activeMarkers.has('stand') && !experimentState.isStandAttached) {
                     const standPos = new THREE.Vector3();
                     standMarker.object3D.getWorldPosition(standPos);
+                    experimentState.standPos = standPos; // Save for debug
+
+                    // 3D Distance for debugging
+                    const dist3D = mainPos.distanceTo(standPos);
 
                     // 2D distance calculation (ignore Y/height differences)
                     const dx = mainPos.x - standPos.x;
                     const dz = mainPos.z - standPos.z;
                     const dist2D = Math.sqrt(dx * dx + dz * dz);
 
-                    experimentState.lastStandDist = dist2D; // For debug display
+                    experimentState.lastStandDist = dist2D;
+                    experimentState.lastStandDist3D = dist3D;
 
                     if (dist2D < experimentState.proximityThreshold) {
                         console.log('🧲 Stand Snapped!');
@@ -403,13 +410,18 @@
                 if (experimentState.activeMarkers.has('pot') && experimentState.isStandAttached && !experimentState.isPotAttached) {
                     const potPos = new THREE.Vector3();
                     potMarker.object3D.getWorldPosition(potPos);
+                    experimentState.potPos = potPos; // Save for debug
+
+                    // 3D Distance for debugging
+                    const dist3D = mainPos.distanceTo(potPos);
 
                     // 2D distance calculation
                     const dx = mainPos.x - potPos.x;
                     const dz = mainPos.z - potPos.z;
                     const dist2D = Math.sqrt(dx * dx + dz * dz);
 
-                    experimentState.lastPotDist = dist2D; // For debug display
+                    experimentState.lastPotDist = dist2D;
+                    experimentState.lastPotDist3D = dist3D;
 
                     if (dist2D < experimentState.proximityThreshold) {
                         console.log('🧲 Pot Snapped!');
@@ -464,18 +476,19 @@
         // ============================================
         function updateDebugInfo() {
             const debugContent = document.getElementById('debugContent');
-            const standDist = experimentState.lastStandDist ? experimentState.lastStandDist.toFixed(2) : '--';
-            const potDist = experimentState.lastPotDist ? experimentState.lastPotDist.toFixed(2) : '--';
+
+            const formatPos = (pos) => pos ? `${pos.x.toFixed(1)}, ${pos.y.toFixed(1)}, ${pos.z.toFixed(1)}` : 'n/a';
 
             debugContent.innerHTML = `
-                <div style="margin-top: 8px;">
-                    <div style="margin: 4px 0;">Main Marker: ${experimentState.activeMarkers.has('main') ? '✅' : '❌'}</div>
-                    <div style="margin: 4px 0;">Stand Attached: ${experimentState.isStandAttached ? '✅' : '❌'} (Dist: ${standDist})</div>
-                    <div style="margin: 4px 0;">Pot Attached: ${experimentState.isPotAttached ? '✅' : '❌'} (Dist: ${potDist})</div>
+                <div style="margin-top: 8px; font-size: 10px;">
+                    <div>MainPos: ${formatPos(experimentState.mainPos)}</div>
+                    <div>StandPos: ${formatPos(experimentState.standPos)}</div>
                     <hr style="margin: 5px 0; opacity: 0.3;">
-                    <div style="margin: 4px 0;">Threshold: ${experimentState.proximityThreshold} Units</div>
-                    <div style="margin: 4px 0;">Temperature: ${Math.round(experimentState.temperature)}°C</div>
-                    <div style="margin: 4px 0;">Active: ${Array.from(experimentState.activeMarkers).join(', ')}</div>
+                    <div style="color: yellow;">Distances (2D / 3D):</div>
+                    <div>Stand: ${experimentState.lastStandDist ? experimentState.lastStandDist.toFixed(2) : '--'} / ${experimentState.lastStandDist3D ? experimentState.lastStandDist3D.toFixed(2) : '--'}</div>
+                    <div>Pot: ${experimentState.lastPotDist ? experimentState.lastPotDist.toFixed(2) : '--'} / ${experimentState.lastPotDist3D ? experimentState.lastPotDist3D.toFixed(2) : '--'}</div>
+                    <hr style="margin: 5px 0; opacity: 0.3;">
+                    <div>Status: ${experimentState.isStandAttached ? 'Stand ✅' : 'Stand ❌'} | ${experimentState.isPotAttached ? 'Pot ✅' : 'Pot ❌'}</div>
                 </div>
             `;
         }
