@@ -12,6 +12,10 @@
     <!-- AR.js with Marker Tracking Support -->
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
+    <!-- Particle System Component -->
+    <script
+        src="https://cdn.jsdelivr.net/gh/c-frame/aframe-particle-system-component@master/dist/aframe-particle-system-component.min.js"></script>
+
     <style>
         .a-canvas {
             width: 100% !important;
@@ -119,12 +123,12 @@
                 </a-entity>
 
                 <!-- Mixture (Snapped inside pot) -->
-                <a-entity id="snappedMixture" visible="false" scale="0.2 0.2 0.2" position="-0.1 0.9 0">
+                <a-entity id="snappedMixture" visible="false" scale="0.1 0.1 0.1" position="-0.1 0.9 0">
                     <a-entity gltf-model="Assets/Exothermic reaction/Iron Oxide and Aluminium powder.glb"></a-entity>
                 </a-entity>
 
                 <!-- Magnesium Stick (Snapped into pot/mixture) -->
-                <a-entity id="snappedStick" visible="false" scale="0.5 0.5 0.5" position="-0.1 1.1 0" rotation="0 0 15">
+                <a-entity id="snappedStick" visible="false" scale="0.2 0.2 0.2" position="-0.1 1.1 0" rotation="0 0 15">
                     <a-entity gltf-model="Assets/Exothermic reaction/Magnesium Stick.glb"></a-entity>
                 </a-entity>
 
@@ -146,6 +150,11 @@
 
                 <!-- Gas Lighter GLB Model -->
                 <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0" rotation="0 0 0">
+                </a-entity>
+
+                <!-- Fire Particle Effect (Horizontal Flame) -->
+                <a-entity id="lighterFlame" position="0.4 0 0" rotation="0 90 0"
+                    particle-system="preset: fire; color: #f00,#ff0; size: 0.5; particleCount: 100; velocityValue: 0 2 0; velocitySpread: 0.5 0 0.5; accelerationValue: 0 1 0; maxAge: 0.5">
                 </a-entity>
 
                 <a-text value="🔥 HEAT" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
