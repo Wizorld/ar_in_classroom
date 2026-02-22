@@ -103,14 +103,19 @@
             <!-- Main 3D Model Container -->
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
 
+                <!-- Sand Box (Default on Main Marker) -->
+                <a-entity id="snappedSandBox" visible="true" scale="5 5 5" position="0 -0.5 0">
+                    <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"></a-entity>
+                </a-entity>
+
                 <!-- Tripod Stand (Snapped) -->
-                <a-entity id="snappedStand" visible="false" scale="7 7 7" position="0 -0.5 0">
-                    <a-entity gltf-model="Assets/Exothermic reaction/tripod_stand.glb"></a-entity>
+                <a-entity id="snappedStand" visible="false" scale="7 7 7" position="0 -0.2 0">
+                    <a-entity gltf-model="Assets/Exothermic reaction/Stand.glb"></a-entity>
                 </a-entity>
 
                 <!-- Pot (Snapped on top of stand) -->
-                <a-entity id="snappedPot" visible="false" scale="0.001 0.001 0.001" position="0 0.2 0">
-                    <a-entity gltf-model="Assets/Exothermic reaction/pot.glb"></a-entity>
+                <a-entity id="snappedPot" visible="false" scale="0.001 0.001 0.001" position="0 0.5 0">
+                    <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb"></a-entity>
                 </a-entity>
 
                 <!-- Central Molecule/Apparatus Structure (Original models, can be hidden if needed) -->
@@ -160,7 +165,7 @@
             <a-entity position="0 0 0" scale="3 3 3">
 
                 <!-- Gas Lighter GLB Model -->
-                <a-entity gltf-model="Assets/Exothermic reaction/gas_lighter.glb" position="0 0 0" rotation="0 0 0">
+                <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0" rotation="0 0 0">
                 </a-entity>
 
                 <a-text value="🔥 HEAT" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
@@ -174,7 +179,7 @@
             <a-entity id="potOriginalModel" position="0 0 0" scale="0.001 0.001 0.001">
 
                 <!-- Pot GLB Model -->
-                <a-entity gltf-model="Assets/Exothermic reaction/pot.glb" position="0 0 0" rotation="0 0 0">
+                <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb" position="0 0 0" rotation="0 0 0">
                 </a-entity>
 
                 <a-text value="POT" color="#FFFFFF" position="0 0.5 0" scale="300 300 300" align="center">
@@ -188,7 +193,8 @@
             <a-entity position="0 0 0" scale="5 5 5">
 
                 <!-- Sand Box GLB Model -->
-                <a-entity gltf-model="Assets/Exothermic reaction/sand_box.glb" position="0 0 0" rotation="0 0 0">
+                <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb" position="0 0 0"
+                    rotation="0 0 0">
                 </a-entity>
 
                 <a-text value="🧬 REAGENT" color="#FFFFFF" position="0 0.5 0" scale="0.15 0.15 0.15" align="center">
@@ -202,7 +208,7 @@
             <a-entity id="standOriginalModel" position="0 0 0" scale="5 5 5">
 
                 <!-- Tripod Stand GLB Model -->
-                <a-entity gltf-model="Assets/Exothermic reaction/tripod_stand.glb" position="0 0 0" rotation="0 0 0">
+                <a-entity gltf-model="Assets/Exothermic reaction/Stand.glb" position="0 0 0" rotation="0 0 0">
                 </a-entity>
 
                 <a-text value="TRIPOD" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
