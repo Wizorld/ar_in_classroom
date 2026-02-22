@@ -118,34 +118,14 @@
                     <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb"></a-entity>
                 </a-entity>
 
-                <!-- Central Molecule/Apparatus Structure (Original models, can be hidden if needed) -->
-                <a-entity id="moleculeContainer" position="0 0.8 0" scale="1 1 1" visible="false">
-                    <!-- Base platform -->
-                    <a-cylinder id="basePlatform" radius="0.3" height="0.05" color="#333333" position="0 -0.2 0">
-                    </a-cylinder>
+                <!-- Mixture (Snapped inside pot) -->
+                <a-entity id="snappedMixture" visible="false" scale="0.2 0.2 0.2" position="-0.1 0.9 0">
+                    <a-entity gltf-model="Assets/Exothermic reaction/Iron Oxide and Aluminium powder.glb"></a-entity>
+                </a-entity>
 
-                    <!-- Central container (beaker/flask)  -->
-                    <a-cylinder id="mainContainer" radius="0.15" height="0.4" color="#4CAF50" opacity="0.7"
-                        position="0 0 0">
-                    </a-cylinder>
-
-                    <!-- Liquid inside (will change color based on reactions) -->
-                    <a-cylinder id="liquidContent" radius="0.12" height="0.3" color="#2196F3" opacity="0.8"
-                        position="0 -0.05 0">
-                    </a-cylinder>
-
-                    <!-- Heating element (burner) -->
-                    <a-cone id="burner" radius-bottom="0.12" radius-top="0.08" height="0.1" color="#FF6F00"
-                        opacity="0.6" position="0 -0.25 0">
-                    </a-cone>
-
-                    <!-- Thermometer -->
-                    <a-cylinder id="thermometer" radius="0.02" height="0.3" color="#FF4444" position="0.2 0 0">
-                    </a-cylinder>
-
-                    <!-- Stirrer -->
-                    <a-cylinder id="stirrer" radius="0.01" height="0.35" color="#CCCCCC" position="-0.15 0 0">
-                    </a-cylinder>
+                <!-- Magnesium Stick (Snapped into pot/mixture) -->
+                <a-entity id="snappedStick" visible="false" scale="0.5 0.5 0.5" position="-0.1 1.1 0" rotation="0 0 15">
+                    <a-entity gltf-model="Assets/Exothermic reaction/Magnesium Stick.glb"></a-entity>
                 </a-entity>
 
                 <!-- Temperature indicator -->
@@ -204,15 +184,27 @@
 
         <!-- EVENT MARKER 4: TRIPOD STAND (Barcode 3) -->
         <a-marker id="tripodStandMarker" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="8">
-
             <a-entity id="standOriginalModel" position="0 0 0" scale="5 5 5">
+                <a-entity gltf-model="Assets/Exothermic reaction/Stand.glb" position="0 0 0"
+                    rotation="0 0 0"></a-entity>
+                <a-text value="TRIPOD" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center"></a-text>
+            </a-entity>
+        </a-marker>
 
-                <!-- Tripod Stand GLB Model -->
-                <a-entity gltf-model="Assets/Exothermic reaction/Stand.glb" position="0 0 0" rotation="0 0 0">
-                </a-entity>
+        <!-- EVENT MARKER 5: MIXTURE (Barcode 4) -->
+        <a-marker id="mixtureMarker" type="barcode" value="4" emitevents="true" smooth="true" smoothCount="8">
+            <a-entity id="mixtureOriginalModel" position="0 0 0" scale="0.2 0.2 0.2">
+                <a-entity gltf-model="Assets/Exothermic reaction/Iron Oxide and Aluminium powder.glb"
+                    position="0 0 0"></a-entity>
+                <a-text value="MIXTURE" color="#FFFFFF" position="0 0.5 0" scale="1 1 1" align="center"></a-text>
+            </a-entity>
+        </a-marker>
 
-                <a-text value="TRIPOD" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center">
-                </a-text>
+        <!-- EVENT MARKER 6: MAGNESIUM STICK (Barcode 6) -->
+        <a-marker id="magnesiumStickMarker" type="barcode" value="6" emitevents="true" smooth="true" smoothCount="8">
+            <a-entity id="stickOriginalModel" position="0 0 0" scale="1 1 1">
+                <a-entity gltf-model="Assets/Exothermic reaction/Magnesium Stick.glb" position="0 0 0"></a-entity>
+                <a-text value="STICK" color="#FFFFFF" position="0 0.5 0" scale="0.4 0.4 0.4" align="center"></a-text>
             </a-entity>
         </a-marker>
 
@@ -234,6 +226,8 @@
             containerColor: '#4CAF50',
             isStandAttached: false,
             isPotAttached: false,
+            isMixtureAttached: false,
+            isStickAttached: false,
             proximityThreshold: 4.0 // Distance threshold for snapping
         };
 
@@ -324,6 +318,32 @@
             tripodStandMarker.addEventListener('markerLost', () => {
                 console.log('Tripod marker lost');
                 experimentState.activeMarkers.delete('stand');
+                updateDebugInfo();
+            });
+
+            // Mixture marker events
+            const mixtureMarker = document.getElementById('mixtureMarker');
+            mixtureMarker.addEventListener('markerFound', () => {
+                console.log('Mixture marker detected');
+                experimentState.activeMarkers.add('mixture');
+                updateDebugInfo();
+            });
+            mixtureMarker.addEventListener('markerLost', () => {
+                console.log('Mixture marker lost');
+                experimentState.activeMarkers.delete('mixture');
+                updateDebugInfo();
+            });
+
+            // Stick marker events
+            const magnesiumStickMarker = document.getElementById('magnesiumStickMarker');
+            magnesiumStickMarker.addEventListener('markerFound', () => {
+                console.log('Stick marker detected');
+                experimentState.activeMarkers.add('stick');
+                updateDebugInfo();
+            });
+            magnesiumStickMarker.addEventListener('markerLost', () => {
+                console.log('Stick marker lost');
+                experimentState.activeMarkers.delete('stick');
                 updateDebugInfo();
             });
         }
@@ -436,6 +456,44 @@
                         document.getElementById('potOriginalModel').setAttribute('visible', 'false');
                     }
                 }
+
+                // Check Mixture proximity (requires pot to be attached)
+                if (experimentState.activeMarkers.has('mixture') && experimentState.isPotAttached && !experimentState.isMixtureAttached) {
+                    const mixturePos = new THREE.Vector3();
+                    document.getElementById('mixtureMarker').object3D.getWorldPosition(mixturePos);
+                    experimentState.mixturePos = mixturePos;
+
+                    const dx = mainPos.x - mixturePos.x;
+                    const dz = mainPos.z - mixturePos.z;
+                    const dist2D = Math.sqrt(dx * dx + dz * dz);
+                    experimentState.lastMixtureDist = dist2D;
+
+                    if (dist2D < experimentState.proximityThreshold) {
+                        console.log('🧲 Mixture Snapped!');
+                        experimentState.isMixtureAttached = true;
+                        document.getElementById('snappedMixture').setAttribute('visible', 'true');
+                        document.getElementById('mixtureOriginalModel').setAttribute('visible', 'false');
+                    }
+                }
+
+                // Check Stick proximity (requires mixture to be attached)
+                if (experimentState.activeMarkers.has('stick') && experimentState.isMixtureAttached && !experimentState.isStickAttached) {
+                    const stickPos = new THREE.Vector3();
+                    document.getElementById('magnesiumStickMarker').object3D.getWorldPosition(stickPos);
+                    experimentState.stickPos = stickPos;
+
+                    const dx = mainPos.x - stickPos.x;
+                    const dz = mainPos.z - stickPos.z;
+                    const dist2D = Math.sqrt(dx * dx + dz * dz);
+                    experimentState.lastStickDist = dist2D;
+
+                    if (dist2D < experimentState.proximityThreshold) {
+                        console.log('🧲 Stick Snapped!');
+                        experimentState.isStickAttached = true;
+                        document.getElementById('snappedStick').setAttribute('visible', 'true');
+                        document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
+                    }
+                }
             }
 
             // Update temperature when heating
@@ -493,8 +551,10 @@
                     <div style="color: yellow;">Distances (2D / 3D):</div>
                     <div>Stand: ${experimentState.lastStandDist ? experimentState.lastStandDist.toFixed(2) : '--'} / ${experimentState.lastStandDist3D ? experimentState.lastStandDist3D.toFixed(2) : '--'}</div>
                     <div>Pot: ${experimentState.lastPotDist ? experimentState.lastPotDist.toFixed(2) : '--'} / ${experimentState.lastPotDist3D ? experimentState.lastPotDist3D.toFixed(2) : '--'}</div>
+                    <div>Mix: ${experimentState.lastMixtureDist ? experimentState.lastMixtureDist.toFixed(2) : '--'}</div>
+                    <div>Stick: ${experimentState.lastStickDist ? experimentState.lastStickDist.toFixed(2) : '--'}</div>
                     <hr style="margin: 5px 0; opacity: 0.3;">
-                    <div>Status: ${experimentState.isStandAttached ? 'Stand ✅' : 'Stand ❌'} | ${experimentState.isPotAttached ? 'Pot ✅' : 'Pot ❌'}</div>
+                    <div>Status: ${experimentState.isStandAttached ? 'ST ✅' : 'ST ❌'} ${experimentState.isPotAttached ? 'PT ✅' : 'PT ❌'} ${experimentState.isMixtureAttached ? 'MX ✅' : 'MX ❌'} ${experimentState.isStickAttached ? 'SK ✅' : 'SK ❌'}</div>
                 </div>
             `;
         }
