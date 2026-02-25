@@ -169,6 +169,9 @@
                     align="center"></a-text>
                 <a-text id="labLabel" value="Chemistry Lab" color="#00FF00" position="0 -0.45 0" scale="0.1 0.1 0.1"
                     align="center"></a-text>
+
+                <!-- Thermite Reaction Effect (Modular) -->
+                <a-entity id="thermiteEffect" thermite-reaction="active: false" position="0 0.9 0"></a-entity>
             </a-entity>
         </a-marker>
 
@@ -236,8 +239,145 @@
             isPotAttached: false,
             isMixtureAttached: false,
             isStickAttached: false,
-            proximityThreshold: 4.0
+            proximityThreshold: 4.0,
+            thermiteStartTime: 0,
+            thermiteTriggered: false
         };
+
+        // --- Thermite Particle System Component ---
+        AFRAME.registerComponent('thermite-reaction', {
+            schema: { active: { default: false } },
+            init: function () {
+                this.S = 5000; // Sparks
+                this.SM = 400; // Smoke
+                this.reactionTime = 0;
+                this.active = false;
+
+                // Geometry/Material setup for sparks
+                this.sparkGeo = new THREE.BufferGeometry();
+                this.aSpPos = new Float32Array(this.S * 3);
+                this.aSpL = new Float32Array(this.S); // Age/Life
+                this.aSpP = new Float32Array(this.S); // Phase
+
+                this.sparkGeo.setAttribute('position', new THREE.BufferAttribute(this.aSpPos, 3).setUsage(THREE.DynamicDrawUsage));
+                this.sparkGeo.setAttribute('aLife', new THREE.BufferAttribute(this.aSpL, 1).setUsage(THREE.DynamicDrawUsage));
+                this.sparkGeo.setAttribute('aPhase', new THREE.BufferAttribute(this.aSpP, 1).setUsage(THREE.DynamicDrawUsage));
+
+                const SPARK_VERT = `
+                    attribute float aLife;
+                    attribute float aPhase;
+                    varying float vLife;
+                    varying float vPhase;
+                    void main(){
+                      vLife = aLife;
+                      vPhase = aPhase;
+                      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+                      gl_PointSize = (vPhase == 2.0 ? 15.0 : 8.0) * (300.0 / -mv.z) * (1.0 - aLife);
+                      gl_Position = projectionMatrix * mv;
+                    }
+                `;
+                const SPARK_FRAG = `
+                    varying float vLife;
+                    varying float vPhase;
+                    void main(){
+                      float d = distance(gl_PointCoord, vec2(0.5));
+                      if(d > 0.5) discard;
+                      vec3 color = vec3(1.0, 0.4, 0.1);
+                      if(vPhase == 2.0) color = vec3(1.0, 1.0, 0.8);
+                      gl_FragColor = vec4(color, (1.0 - vLife) * 0.8);
+                    }
+                `;
+
+                this.sparkMat = new THREE.ShaderMaterial({
+                    vertexShader: SPARK_VERT,
+                    fragmentShader: SPARK_FRAG,
+                    transparent: true,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+
+                this.sparkPoints = new THREE.Points(this.sparkGeo, this.sparkMat);
+                this.el.setObject3D('sparks', this.sparkPoints);
+
+                // CPU Data
+                this.spData = [];
+                for (let i = 0; i < this.S; i++) {
+                    this.spData.push({ alive: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(), life: 0, maxL: 0, phase: 0 });
+                }
+            },
+
+            tick: function (t, dt) {
+                if (!this.data.active) return;
+                const delta = dt / 1000;
+                this.reactionTime += delta;
+
+                // Spawn logic
+                let spawnRate = 0;
+                let phase = 1;
+                if (this.reactionTime < 2) { spawnRate = 50; phase = 1; } // Pre-ignition
+                else if (this.reactionTime < 2.5) { spawnRate = 800; phase = 2; } // Flash
+                else if (this.reactionTime < 6) { spawnRate = 200; phase = 3; } // Peak
+                else if (this.reactionTime < 10) { spawnRate = 50; phase = 4; } // Cooldown
+
+                for (let i = 0; i < spawnRate * delta; i++) {
+                    this.spawnSpark(phase);
+                }
+
+                // Update logic
+                const posAttr = this.sparkGeo.getAttribute('position');
+                const lifeAttr = this.sparkGeo.getAttribute('aLife');
+                const phaseAttr = this.sparkGeo.getAttribute('aPhase');
+
+                for (let i = 0; i < this.S; i++) {
+                    const s = this.spData[i];
+                    if (!s.alive) continue;
+
+                    s.life += delta;
+                    if (s.life > s.maxL) {
+                        s.alive = false;
+                        posAttr.setY(i, -100);
+                        continue;
+                    }
+
+                    s.vel.y -= 9.8 * delta; // Gravity
+                    s.pos.addScaledVector(s.vel, delta);
+
+                    // Ground bounce
+                    if (s.pos.y < 0) {
+                        s.pos.y = 0;
+                        s.vel.y = Math.abs(s.vel.y) * 0.3;
+                        s.vel.x *= 0.6;
+                        s.vel.z *= 0.6;
+                    }
+
+                    posAttr.setXYZ(i, s.pos.x, s.pos.y, s.pos.z);
+                    lifeAttr.setX(i, s.life / s.maxL);
+                    phaseAttr.setX(i, s.phase);
+                }
+                posAttr.needsUpdate = true;
+                lifeAttr.needsUpdate = true;
+                phaseAttr.needsUpdate = true;
+            },
+
+            spawnSpark: function (phase) {
+                const i = this.spData.findIndex(s => !s.alive);
+                if (i === -1) return;
+                const s = this.spData[i];
+                s.alive = true;
+                s.life = 0;
+                s.phase = phase;
+                s.maxL = Math.random() * 2 + 0.5;
+                s.pos.set(0, 0, 0);
+
+                if (phase === 2) { // Flash
+                    const angle = Math.random() * Math.PI * 2;
+                    const spd = Math.random() * 8 + 4;
+                    s.vel.set(Math.cos(angle) * spd, Math.random() * 10 + 2, Math.sin(angle) * spd);
+                } else {
+                    s.vel.set((Math.random() - 0.5) * 4, Math.random() * 6 + 2, (Math.random() - 0.5) * 4);
+                }
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
@@ -327,6 +467,20 @@
                         experimentState.isStickAttached = true;
                         document.getElementById('snappedStick').setAttribute('visible', 'true');
                         document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
+
+                        // Start Thermite ignition countdown
+                        experimentState.thermiteStartTime = Date.now();
+                        console.log('⏳ Thermite countdown started... 5s to ignition');
+                    }
+                }
+
+                // Handle Thermite Trigger (5s Delay)
+                if (experimentState.isStickAttached && !experimentState.thermiteTriggered) {
+                    const elapsed = (Date.now() - experimentState.thermiteStartTime) / 1000;
+                    if (elapsed >= 5.0) {
+                        console.log('💥 THERMITE IGNITION!');
+                        experimentState.thermiteTriggered = true;
+                        document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
                     }
                 }
             }
