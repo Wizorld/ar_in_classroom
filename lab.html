@@ -16,6 +16,9 @@
     <script
         src="https://cdn.jsdelivr.net/gh/c-frame/aframe-particle-system-component@master/dist/aframe-particle-system-component.min.js"></script>
 
+    <!-- A-Frame Extras for Animation Mixer -->
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+
     <style>
         body {
             margin: 0;
@@ -172,7 +175,8 @@
         <!-- EVENT MARKER 1: HEAT (Barcode 0) -->
         <a-marker id="heatMarker" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="8">
             <a-entity position="0 0 0" scale="3 3 3">
-                <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0"></a-entity>
+                <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0"
+                    animation-mixer="clip: Flame"></a-entity>
             </a-entity>
         </a-marker>
 
