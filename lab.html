@@ -244,101 +244,131 @@
             thermiteTriggered: false
         };
 
-        // --- Thermite Particle System Component (Enhanced) ---
+        // --- Thermite Particle System Component (1:1 Port from thermite-staged.html) ---
         AFRAME.registerComponent('thermite-reaction', {
             schema: { active: { default: false } },
             init: function () {
-                this.S = 4000; // Max Sparks
-                this.SM = 500; // Max Smoke
+                const P = {
+                    maxSparks: 5000,
+                    maxSmoke: 1000,
+                    gravity: -9.8,
+                    groundY: -0.9,
+                    totalTime: 12,
+                    phases: [
+                        { id: 1, start: 0, end: 2 },
+                        { id: 2, start: 2, end: 2.5 },
+                        { id: 3, start: 2.5, end: 7 },
+                        { id: 4, start: 7, end: 12 }
+                    ]
+                };
+                this.P = P;
                 this.reactionTime = 0;
-                this.active = false;
+                this.flashFired = false;
 
-                // Texture Generation (Radial Spark & Smoke)
-                const createRadialTexture = (inner, mid, outer, sz = 64) => {
+                const radialTex = (inner, mid, outer, sz = 64) => {
                     const c = document.createElement('canvas'); c.width = c.height = sz;
                     const ctx = c.getContext('2d');
                     const g = ctx.createRadialGradient(sz / 2, sz / 2, 0, sz / 2, sz / 2, sz / 2);
                     g.addColorStop(0, inner); g.addColorStop(0.28, mid); g.addColorStop(1, outer);
                     ctx.fillStyle = g; ctx.fillRect(0, 0, sz, sz);
-                    const tex = new THREE.CanvasTexture(c);
-                    return tex;
+                    return new THREE.CanvasTexture(c);
                 };
 
-                this.texSpark = createRadialTexture('rgba(255,255,255,1)', 'rgba(255,140,20,.5)', 'rgba(0,0,0,0)');
-                this.texSmoke = createRadialTexture('rgba(180,160,140,.35)', 'rgba(120,100,85,.12)', 'rgba(0,0,0,0)', 128);
+                const texSpark = radialTex('rgba(255,255,255,1)', 'rgba(255,140,20,.5)', 'rgba(0,0,0,0)');
+                const texSmoke = radialTex('rgba(180,160,140,.35)', 'rgba(120,100,85,.12)', 'rgba(0,0,0,0)', 128);
+                const texGlow = radialTex('rgba(255,220,120,.9)', 'rgba(255,100,10,.35)', 'rgba(0,0,0,0)', 128);
 
-                // 1. SPARK SYSTEM SETUP
+                this.coreMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+                this.coreMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), this.coreMat);
+                this.coreMesh.rotation.x = -Math.PI / 2; this.coreMesh.position.y = 0.01;
+                this.el.setObject3D('core', this.coreMesh);
+
+                this.haloMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+                this.haloMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), this.haloMat);
+                this.haloMesh.rotation.x = -Math.PI / 2; this.haloMesh.position.y = 0.005;
+                this.el.setObject3D('halo', this.haloMesh);
+
+                const S = P.maxSparks;
+                this.S = S;
+                this.spx = new Float32Array(S); this.spy = new Float32Array(S); this.spz = new Float32Array(S);
+                this.svx = new Float32Array(S); this.svy = new Float32Array(S); this.svz = new Float32Array(S);
+                this.sLife = new Float32Array(S); this.sMaxL = new Float32Array(S);
+                this.sAlive = new Uint8Array(S); this.sSec = new Uint8Array(S);
+                this.sBnc = new Uint8Array(S); this.sPhase = new Uint8Array(S);
+
                 this.sparkGeo = new THREE.BufferGeometry();
-                this.aSpPosBuffer = new Float32Array(this.S * 3).fill(-1000); // Initialize far away
-                this.aSpLBuffer = new Float32Array(this.S);
-                this.aSpPBuffer = new Float32Array(this.S);
-                this.aSpSzBuffer = new Float32Array(this.S);
-                this.aSpBrBuffer = new Float32Array(this.S);
+                this.aSpPos = new Float32Array(S * 3).fill(-200);
+                this.aSpL = new Float32Array(S);
+                this.aSpSz = new Float32Array(S);
+                this.aSpBr = new Float32Array(S);
+                this.aSpP = new Float32Array(S);
 
-                this.sparkGeo.setAttribute('position', new THREE.BufferAttribute(this.aSpPosBuffer, 3).setUsage(THREE.DynamicDrawUsage));
-                this.sparkGeo.setAttribute('aLife', new THREE.BufferAttribute(this.aSpLBuffer, 1).setUsage(THREE.DynamicDrawUsage));
-                this.sparkGeo.setAttribute('aPhase', new THREE.BufferAttribute(this.aSpPBuffer, 1).setUsage(THREE.DynamicDrawUsage));
-                this.sparkGeo.setAttribute('aSize', new THREE.BufferAttribute(this.aSpSzBuffer, 1).setUsage(THREE.DynamicDrawUsage));
-                this.sparkGeo.setAttribute('aBright', new THREE.BufferAttribute(this.aSpBrBuffer, 1).setUsage(THREE.DynamicDrawUsage));
+                this.sparkGeo.setAttribute('position', new THREE.BufferAttribute(this.aSpPos, 3).setUsage(THREE.DynamicDrawUsage));
+                this.sparkGeo.setAttribute('aLife', new THREE.BufferAttribute(this.aSpL, 1).setUsage(THREE.DynamicDrawUsage));
+                this.sparkGeo.setAttribute('aSize', new THREE.BufferAttribute(this.aSpSz, 1).setUsage(THREE.DynamicDrawUsage));
+                this.sparkGeo.setAttribute('aBright', new THREE.BufferAttribute(this.aSpBr, 1).setUsage(THREE.DynamicDrawUsage));
+                this.sparkGeo.setAttribute('aPhase', new THREE.BufferAttribute(this.aSpP, 1).setUsage(THREE.DynamicDrawUsage));
 
                 const SPARK_VERT = `
                     attribute float aLife; attribute float aSize; attribute float aBright; attribute float aPhase;
                     varying float vLife; varying float vBright; varying float vPhase;
                     void main(){
-                      vLife = aLife; vBright = aBright; vPhase = aPhase;
-                      vec4 mv = modelViewMatrix * vec4(position, 1.0);
-                      gl_PointSize = aSize * (200.0 / -mv.z); 
-                      gl_Position = projectionMatrix * mv;
+                        vLife = aLife; vBright = aBright; vPhase = aPhase;
+                        vec4 mv = modelViewMatrix * vec4(position,1.);
+                        gl_PointSize = aSize * (310. / -mv.z);
+                        gl_Position = projectionMatrix * mv;
                     }
                 `;
                 const SPARK_FRAG = `
-                    uniform sampler2D uTex;
-                    varying float vLife; varying float vBright; varying float vPhase;
+                    uniform sampler2D uTex; varying float vLife; varying float vBright; varying float vPhase;
                     vec3 sparkColor(float t, float phase){
-                      if(phase < 1.5) return mix(vec3(1.,.65,.1), vec3(.9,.25,.0), t);
-                      if(phase < 2.5) return mix(vec3(1.,1.,.95), vec3(1.,.9,.05), t);
-                      if(phase < 3.5){
-                          vec3 w=vec3(1.,1.,.97); vec3 y=vec3(1.,.93,.08); vec3 o=vec3(1.,.38,.02);
-                          return t < .4 ? mix(w, y, t/.4) : mix(y, o, (t-.4)/.6);
-                      }
-                      vec3 o=vec3(1.,.4,.04); vec3 r=vec3(.82,.06,.0); vec3 dr=vec3(.28,.01,.0);
-                      return t < .5 ? mix(o, r, t/.5) : mix(r, dr, (t-.5)/.5);
+                        if(phase < 1.5) return mix(vec3(1.,.65,.1), vec3(.9,.25,.0), t);
+                        if(phase < 2.5) return mix(vec3(1.,1.,.95), vec3(1.,.9,.05), t);
+                        if(phase < 3.5){
+                            vec3 w=vec3(1.,1.,.97); vec3 y=vec3(1.,.93,.08); vec3 o=vec3(1.,.38,.02);
+                            return t < .4 ? mix(w, y, t/.4) : mix(y, o, (t-.4)/.6);
+                        }
+                        vec3 o=vec3(1.,.4,.04); vec3 r=vec3(.82,.06,.0); vec3 dr=vec3(.28,.01,.0);
+                        return t < .5 ? mix(o, r, t/.5) : mix(r, dr, (t-.5)/.5);
                     }
                     void main(){
-                      vec4 tex = texture2D(uTex, gl_PointCoord);
-                      if(tex.a < .01) discard;
-                      float fade = vLife > .75 ? 1.-(vLife-.75)/.25 : 1.;
-                      vec3 col = sparkColor(vLife, vPhase) * (.72 + .28*vBright);
-                      if(vLife < .2) col += vec3(.8,.6,.3)*(1.-vLife/.2);
-                      gl_FragColor = vec4(col * tex.rgb, tex.a * fade);
+                        vec4 tex = texture2D(uTex, gl_PointCoord);
+                        if(tex.a < .012) discard;
+                        float fade = vLife > .75 ? 1.-(vLife-.75)/.25 : 1.;
+                        vec3 col = sparkColor(vLife, vPhase) * (.72 + .28*vBright);
+                        if(vLife < .2) col += vec3(.8,.6,.3)*(1.-vLife/.2);
+                        gl_FragColor = vec4(col*tex.rgb, tex.a*fade);
                     }
                 `;
 
                 this.sparkMat = new THREE.ShaderMaterial({
-                    uniforms: { uTex: { value: this.texSpark } },
+                    uniforms: { uTex: { value: texSpark } },
                     vertexShader: SPARK_VERT, fragmentShader: SPARK_FRAG,
-                    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+                    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true
                 });
                 this.sparkPoints = new THREE.Points(this.sparkGeo, this.sparkMat);
                 this.el.setObject3D('sparks', this.sparkPoints);
 
-                // CPU DATA
-                this.spPool = Array.from({ length: this.S }, (_, i) => ({
-                    id: i, alive: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(),
-                    life: 0, maxL: 1, phase: 1, size: 5, bright: 1
-                }));
+                this.sFree = new Int32Array(S); this.sFreeH = S;
+                for (let i = 0; i < S; i++) this.sFree[i] = S - 1 - i;
 
-                // 2. SMOKE SYSTEM SETUP
+                const SM = P.maxSmoke;
+                this.SM = SM;
+                this.smPx = new Float32Array(SM); this.smPy = new Float32Array(SM); this.smPz = new Float32Array(SM);
+                this.smVx = new Float32Array(SM); this.smVy = new Float32Array(SM); this.smVz = new Float32Array(SM);
+                this.smL = new Float32Array(SM); this.smML = new Float32Array(SM);
+                this.smAlive = new Uint8Array(SM);
+
                 this.smGeo = new THREE.BufferGeometry();
-                this.smPosArr = new Float32Array(this.SM * 3).fill(-1000);
-                this.smLArr = new Float32Array(this.SM);
-                this.smOpArr = new Float32Array(this.SM);
-                this.smSzArr = new Float32Array(this.SM);
+                this.aSmPos = new Float32Array(SM * 3).fill(-200);
+                this.aSmL = new Float32Array(SM);
+                this.aSmSz = new Float32Array(SM);
+                this.aSmOp = new Float32Array(SM);
 
-                this.smGeo.setAttribute('position', new THREE.BufferAttribute(this.smPosArr, 3).setUsage(THREE.DynamicDrawUsage));
-                this.smGeo.setAttribute('aLife', new THREE.BufferAttribute(this.smLArr, 1).setUsage(THREE.DynamicDrawUsage));
-                this.smGeo.setAttribute('aOpacity', new THREE.BufferAttribute(this.smOpArr, 1).setUsage(THREE.DynamicDrawUsage));
-                this.smGeo.setAttribute('aSize', new THREE.BufferAttribute(this.smSzArr, 1).setUsage(THREE.DynamicDrawUsage));
+                this.smGeo.setAttribute('position', new THREE.BufferAttribute(this.aSmPos, 3).setUsage(THREE.DynamicDrawUsage));
+                this.smGeo.setAttribute('aLife', new THREE.BufferAttribute(this.aSmL, 1).setUsage(THREE.DynamicDrawUsage));
+                this.smGeo.setAttribute('aSize', new THREE.BufferAttribute(this.aSmSz, 1).setUsage(THREE.DynamicDrawUsage));
+                this.smGeo.setAttribute('aOpacity', new THREE.BufferAttribute(this.aSmOp, 1).setUsage(THREE.DynamicDrawUsage));
 
                 const SMOKE_VERT = `
                     attribute float aLife; attribute float aSize; attribute float aOpacity;
@@ -346,7 +376,7 @@
                     void main(){
                         vLife=aLife; vOp=aOpacity;
                         vec4 mv=modelViewMatrix*vec4(position,1.);
-                        gl_PointSize=aSize*(250.0/-mv.z);
+                        gl_PointSize=aSize*(340./-mv.z);
                         gl_Position=projectionMatrix*mv;
                     }
                 `;
@@ -354,122 +384,235 @@
                     uniform sampler2D uTex; varying float vLife; varying float vOp;
                     void main(){
                         vec4 t=texture2D(uTex,gl_PointCoord);
-                        if(t.a<.001) discard;
+                        if(t.a<.005) discard;
                         float fade=(vLife<.1)?(vLife/.1):(vLife>.7?(1.-(vLife-.7)/.3):1.);
                         float grey=mix(.55,.18,vLife);
                         gl_FragColor=vec4(vec3(grey)*t.rgb, t.a*fade*vOp);
                     }
                 `;
+
                 this.smMat = new THREE.ShaderMaterial({
-                    uniforms: { uTex: { value: this.texSmoke } },
+                    uniforms: { uTex: { value: texSmoke } },
                     vertexShader: SMOKE_VERT, fragmentShader: SMOKE_FRAG,
-                    transparent: true, blending: THREE.NormalBlending, depthWrite: false
+                    transparent: true, blending: THREE.NormalBlending, depthWrite: false, depthTest: true
                 });
                 this.smPoints = new THREE.Points(this.smGeo, this.smMat);
                 this.el.setObject3D('smoke', this.smPoints);
 
-                this.smPool = Array.from({ length: this.SM }, (_, i) => ({
-                    id: i, alive: false, pos: new THREE.Vector3(), vel: new THREE.Vector3(),
-                    life: 0, maxL: 3, opacity: 0.5, size: 2
-                }));
-
-                this.el.setAttribute('visible', false);
+                this.smFree = new Int32Array(SM); this.smFreeH = SM;
+                for (let i = 0; i < SM; i++) this.smFree[i] = SM - 1 - i;
             },
 
             tick: function (t, dt) {
                 if (!this.data.active) return;
-                if (!this.el.getAttribute('visible')) this.el.setAttribute('visible', true);
+                const rawDt = Math.min(dt / 1000, 0.05);
+                this.reactionTime += rawDt;
+                const T = this.reactionTime;
 
-                const delta = dt / 1000;
-                this.reactionTime += delta;
+                const getPh = (t) => {
+                    for (const ph of this.P.phases) if (t >= ph.start && t < ph.end) return ph.id;
+                    return 4;
+                };
+                const getPP = (t, id) => {
+                    const ph = this.P.phases[id - 1];
+                    return Math.max(0, Math.min(1, (t - ph.start) / (ph.end - ph.start)));
+                };
 
-                // Spawn Logic
-                let spawnRate = 0; let phase = 1;
-                if (this.reactionTime < 2) { spawnRate = 20; phase = 1; }
-                else if (this.reactionTime < 2.5) { spawnRate = 600; phase = 2; }
-                else if (this.reactionTime < 6) { spawnRate = 180; phase = 3; }
-                else if (this.reactionTime < 10) { spawnRate = 40; phase = 4; }
+                const ph = getPh(T);
+                const pp = getPP(T, ph);
 
-                for (let i = 0; i < Math.floor(spawnRate * delta); i++) this.spawnSpark(phase);
-                if (Math.random() < delta * 15) this.spawnSmoke();
-
-                // Update Sparks
-                const spPosArr = this.sparkGeo.getAttribute('position');
-                const spLArr = this.sparkGeo.getAttribute('aLife');
-                const spSArr = this.sparkGeo.getAttribute('aSize');
-                const spPArr = this.sparkGeo.getAttribute('aPhase');
-                const spBArr = this.sparkGeo.getAttribute('aBright');
-
-                this.spPool.forEach(s => {
-                    if (!s.alive) return;
-                    s.life += delta;
-                    const age = s.life / s.maxL;
-                    if (age >= 1) {
-                        s.alive = false;
-                        spPosArr.setXYZ(s.id, -1000, -1000, -1000);
-                        return;
+                if (ph === 1) {
+                    const flicker = .18 + .12 * Math.sin(t * .007) + .08 * Math.sin(t * .019);
+                    this.coreMat.opacity = flicker * (0.3 + 0.7 * pp);
+                    this.haloMat.opacity = flicker * .12 * pp;
+                    this.coreMesh.scale.setScalar(.6 + .3 * pp);
+                    this.haloMesh.scale.setScalar(1 + .5 * pp);
+                    if (Math.random() < rawDt * 4) this.spawnEmber();
+                    if (Math.random() < rawDt * 2) this.spawnSmoke(0, 0, 0, .18 + .12 * pp);
+                }
+                else if (ph === 2) {
+                    if (!this.flashFired) {
+                        this.flashFired = true;
+                        this.spawnIgnitionBurst(700);
                     }
-                    s.vel.y -= 9.81 * delta;
-                    s.pos.addScaledVector(s.vel, delta);
-                    if (s.pos.y < -0.9) { s.pos.y = -0.9; s.vel.y = Math.abs(s.vel.y) * 0.2; }
+                    this.coreMat.opacity = Math.max(0.6, 1.5 - pp * 0.9);
+                    this.haloMat.opacity = Math.max(0.25, 0.8 - pp * 0.55);
+                    this.coreMesh.scale.setScalar(3.5 - pp * 1.7);
+                    this.haloMesh.scale.setScalar(6 - pp * 3.5);
+                }
+                else if (ph === 3) {
+                    this.coreMat.opacity = .8 - .5 * pp;
+                    this.haloMat.opacity = .3 - .2 * pp;
+                    this.coreMesh.scale.setScalar(1.8 - .8 * pp);
+                    this.haloMesh.scale.setScalar(2.5 - 1.1 * pp);
+                    const rate = (180 - 80 * pp) * rawDt * 60;
+                    this.spawnPeak(Math.floor(rate));
+                    if (Math.random() < rawDt * 3.5) this.spawnSmoke(0, 0, 0, .3 + .1 * pp);
+                }
+                else if (ph === 4) {
+                    this.coreMat.opacity = Math.max(0, .3 - .3 * pp);
+                    this.haloMat.opacity = Math.max(0, .1 - .1 * pp);
+                    this.coreMesh.scale.setScalar(Math.max(0.1, 1.0 - .7 * pp));
+                    const rate = (80 - 76 * pp) * rawDt * 60;
+                    if (rate > 1) this.spawnCooldown(Math.floor(rate));
+                    if (Math.random() < rawDt * (2 + 6 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
+                }
 
-                    spPosArr.setXYZ(s.id, s.pos.x, s.pos.y, s.pos.z);
-                    spLArr.setX(s.id, age);
-                    spSArr.setX(s.id, s.size * (1 - age * 0.7));
-                    spPArr.setX(s.id, s.phase);
-                    spBArr.setX(s.id, s.bright);
-                });
-
-                // Update Smoke
-                const smPosArr = this.smGeo.getAttribute('position');
-                const smLArr = this.smGeo.getAttribute('aLife');
-                const smOArr = this.smGeo.getAttribute('aOpacity');
-                const smSArr = this.smGeo.getAttribute('aSize');
-
-                this.smPool.forEach(s => {
-                    if (!s.alive) return;
-                    s.life += delta;
-                    const age = s.life / s.maxL;
+                for (let i = 0; i < this.S; i++) {
+                    if (!this.sAlive[i]) continue;
+                    this.sLife[i] += rawDt;
+                    const age = this.sLife[i] / this.sMaxL[i];
                     if (age >= 1) {
-                        s.alive = false;
-                        smPosArr.setXYZ(s.id, -1000, -1000, -1000);
-                        return;
+                        this.sAlive[i] = 0; this.sFree[this.sFreeH++] = i;
+                        this.aSpPos[i * 3 + 1] = -200; continue;
                     }
-                    s.pos.addScaledVector(s.vel, delta);
-                    smPosArr.setXYZ(s.id, s.pos.x, s.pos.y, s.pos.z);
-                    smLArr.setX(s.id, age);
-                    smOArr.setX(s.id, s.opacity * (1 - age));
-                    smSArr.setX(s.id, s.size * (1 + age * 2));
-                });
+                    this.svx[i] += (Math.random() - .5) * rawDt;
+                    this.svz[i] += (Math.random() - .5) * rawDt;
+                    this.svy[i] += this.P.gravity * rawDt;
+                    const spd = Math.sqrt(this.svx[i] ** 2 + this.svy[i] ** 2 + this.svz[i] ** 2);
+                    const drag = 1 - Math.min(.5 * spd * rawDt, .14);
+                    this.svx[i] *= drag; this.svy[i] *= drag; this.svz[i] *= drag;
+                    this.spx[i] += this.svx[i] * rawDt;
+                    this.spy[i] += this.svy[i] * rawDt;
+                    this.spz[i] += this.svz[i] * rawDt;
+                    if (this.spy[i] <= this.P.groundY) {
+                        this.spy[i] = this.P.groundY;
+                        if (!this.sSec[i] && this.sBnc[i] < 2 && Math.abs(this.svy[i]) > .55) {
+                            this.spawnSecondary(this.spx[i], this.spy[i], this.spz[i], this.svx[i], this.svy[i], this.svz[i], this.sPhase[i]);
+                            this.sBnc[i]++;
+                            this.svy[i] = Math.abs(this.svy[i]) * (0.08 + Math.random() * 0.18);
+                            this.svx[i] *= .42; this.svz[i] *= .42;
+                        } else {
+                            this.svy[i] = 0; this.svx[i] *= .78; this.svz[i] *= .78;
+                            if (Math.abs(this.svx[i]) < .04 && Math.abs(this.svz[i]) < .04) this.sLife[i] = this.sMaxL[i] * .85;
+                        }
+                    }
+                    const j = i * 3;
+                    this.aSpPos[j] = this.spx[i]; this.aSpPos[j + 1] = this.spy[i]; this.aSpPos[j + 2] = this.spz[i];
+                    this.aSpL[i] = age;
+                    const bsz = this.sSec[i] ? (1.2 + Math.random() * 2) : (2.8 + Math.random() * 7.2);
+                    this.aSpSz[i] = bsz * (1 - age * .72);
+                    this.aSpBr[i] = .62 + .38 * Math.random();
+                    this.aSpP[i] = this.sPhase[i];
+                }
+                this.sparkGeo.getAttribute('position').needsUpdate = true;
+                this.sparkGeo.getAttribute('aLife').needsUpdate = true;
+                this.sparkGeo.getAttribute('aSize').needsUpdate = true;
+                this.sparkGeo.getAttribute('aBright').needsUpdate = true;
+                this.sparkGeo.getAttribute('aPhase').needsUpdate = true;
 
-                spPosArr.needsUpdate = true; spLArr.needsUpdate = true;
-                spSArr.needsUpdate = true; spPArr.needsUpdate = true; spBArr.needsUpdate = true;
-                smPosArr.needsUpdate = true; smLArr.needsUpdate = true;
-                smOArr.needsUpdate = true; smSArr.needsUpdate = true;
+                for (let i = 0; i < this.SM; i++) {
+                    if (!this.smAlive[i]) continue;
+                    this.smL[i] += rawDt;
+                    const age = this.smL[i] / this.smML[i];
+                    if (age >= 1) {
+                        this.smAlive[i] = 0; this.smFree[this.smFreeH++] = i;
+                        this.aSmPos[i * 3 + 1] = -200; continue;
+                    }
+                    this.smVx[i] += (Math.random() - .5) * .04 * rawDt;
+                    this.smVz[i] += (Math.random() - .5) * .04 * rawDt;
+                    this.smPx[i] += this.smVx[i] * rawDt; this.smPy[i] += this.smVy[i] * rawDt; this.smPz[i] += this.smVz[i] * rawDt;
+                    this.smVy[i] *= (1 - 0.05 * rawDt);
+                    const j = i * 3;
+                    this.aSmPos[j] = this.smPx[i]; this.aSmPos[j + 1] = this.smPy[i]; this.aSmPos[j + 2] = this.smPz[i];
+                    this.aSmL[i] = age;
+                    this.aSmSz[i] = (2 + Math.random() * 3) * (1 + age * 3.5);
+                    this.aSmOp[i] = 0.5 * (age < 0.1 ? age / 0.1 : (age > 0.7 ? 1 - (age - 0.7) / 0.3 : 1));
+                }
+                this.smGeo.getAttribute('position').needsUpdate = true;
+                this.smGeo.getAttribute('aLife').needsUpdate = true;
+                this.smGeo.getAttribute('aSize').needsUpdate = true;
+                this.smGeo.getAttribute('aOpacity').needsUpdate = true;
             },
 
-            spawnSpark: function (phase) {
-                const s = this.spPool.find(p => !p.alive);
-                if (!s) return;
-                s.alive = true; s.life = 0; s.phase = phase; s.pos.set(0, 0, 0);
-                s.bright = 0.6 + 0.4 * Math.random();
-                const angle = Math.random() * Math.PI * 2;
-                if (phase === 2) {
-                    const spd = Math.random() * 6 + 4;
-                    s.vel.set(Math.cos(angle) * spd, Math.random() * 8 + 2, Math.sin(angle) * spd);
-                    s.size = Math.random() * 8 + 4; s.maxL = Math.random() * 1.5 + 0.5;
-                } else {
-                    s.vel.set((Math.random() - 0.5) * 2, Math.random() * 4 + 2, (Math.random() - 0.5) * 2);
-                    s.size = Math.random() * 4 + 2; s.maxL = Math.random() * 2 + 1;
+            spawnEmber: function () {
+                if (this.sFreeH === 0) return;
+                const i = this.sFree[--this.sFreeH];
+                this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 1;
+                this.spx[i] = (Math.random() + Math.random() - 1) * .12;
+                this.spy[i] = .05 + Math.random() * .15;
+                this.spz[i] = (Math.random() + Math.random() - 1) * .12;
+                this.svx[i] = (Math.random() + Math.random() - 1) * .2;
+                this.svy[i] = .15 + Math.random() * .4;
+                this.svz[i] = (Math.random() + Math.random() - 1) * .2;
+                this.sLife[i] = 0; this.sMaxL[i] = .6 + Math.random() * 1.2;
+            },
+            spawnIgnitionBurst: function (n) {
+                for (let s = 0; s < n; s++) {
+                    if (this.sFreeH === 0) return;
+                    const i = this.sFree[--this.sFreeH];
+                    this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 2;
+                    const a = Math.random() * Math.PI * 2;
+                    const elev = (0.2 + Math.random() * 0.7) * Math.PI / 2;
+                    const spd = 4 + Math.random() * 7;
+                    this.spx[i] = (Math.random() + Math.random() - 1) * .05;
+                    this.spy[i] = Math.random() * .08;
+                    this.spz[i] = (Math.random() + Math.random() - 1) * .05;
+                    this.svx[i] = Math.cos(elev) * Math.cos(a) * spd;
+                    this.svy[i] = Math.sin(elev) * spd + Math.random() * 3;
+                    this.svz[i] = Math.cos(elev) * Math.sin(a) * spd;
+                    this.sLife[i] = 0; this.sMaxL[i] = .5 + Math.random() * 1.3;
                 }
             },
-
-            spawnSmoke: function () {
-                const s = this.smPool.find(p => !p.alive);
-                if (!s) return;
-                s.alive = true; s.life = 0; s.pos.set(0, 0, 0);
-                s.vel.set((Math.random() - 0.5) * 0.2, Math.random() * 0.5 + 0.1, (Math.random() - 0.5) * 0.2);
-                s.size = Math.random() * 2 + 1; s.maxL = Math.random() * 3 + 2; s.opacity = 0.4;
+            spawnPeak: function (n) {
+                for (let s = 0; s < n; s++) {
+                    if (this.sFreeH === 0) return;
+                    const i = this.sFree[--this.sFreeH];
+                    this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 3;
+                    const a = Math.random() * Math.PI * 2;
+                    const cone = Math.random() * .5;
+                    const spd = 3 + Math.random() * 5.5;
+                    this.spx[i] = (Math.random() + Math.random() - 1) * .08;
+                    this.spy[i] = Math.random() * .14;
+                    this.spz[i] = (Math.random() + Math.random() - 1) * .08;
+                    this.svx[i] = Math.cos(a) * cone + (Math.random() + Math.random() - 1) * .28;
+                    this.svy[i] = spd;
+                    this.svz[i] = Math.sin(a) * cone + (Math.random() + Math.random() - 1) * .28;
+                    this.sLife[i] = 0; this.sMaxL[i] = 1.0 + Math.random() * 2.2;
+                }
+            },
+            spawnCooldown: function (n) {
+                for (let s = 0; s < n; s++) {
+                    if (this.sFreeH === 0) return;
+                    const i = this.sFree[--this.sFreeH];
+                    this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 4;
+                    const a = Math.random() * Math.PI * 2;
+                    const cone = Math.random() * .35;
+                    const spd = 1.5 + Math.random() * 3.5;
+                    this.spx[i] = (Math.random() + Math.random() - 1) * .07;
+                    this.spy[i] = Math.random() * .1;
+                    this.spz[i] = (Math.random() + Math.random() - 1) * .07;
+                    this.svx[i] = Math.cos(a) * cone + (Math.random() + Math.random() - 1) * .2;
+                    this.svy[i] = spd;
+                    this.svz[i] = Math.sin(a) * cone + (Math.random() + Math.random() - 1) * .2;
+                    this.sLife[i] = 0; this.sMaxL[i] = .8 + Math.random() * 1.7;
+                }
+            },
+            spawnSecondary: function (ox, oy, oz, ovx, ovy, ovz, ph) {
+                const n = Math.floor(1 + Math.random() * 5);
+                for (let s = 0; s < n; s++) {
+                    if (this.sFreeH === 0) return;
+                    const i = this.sFree[--this.sFreeH];
+                    this.sAlive[i] = 1; this.sSec[i] = 1; this.sBnc[i] = 99; this.sPhase[i] = ph;
+                    this.spx[i] = ox; this.spy[i] = oy + .01; this.spz[i] = oz;
+                    this.svx[i] = ovx * .2 + (Math.random() + Math.random() - 1) * 1.4;
+                    this.svy[i] = Math.abs(ovy) * (0.08 + Math.random() * 0.27) + 0.2 + Math.random() * 0.9;
+                    this.svz[i] = ovz * .2 + (Math.random() + Math.random() - 1) * 1.4;
+                    this.sLife[i] = Math.random() * .06; this.sMaxL[i] = .2 + Math.random() * .6;
+                }
+            },
+            spawnSmoke: function (x, y, z, opacity) {
+                if (this.smFreeH === 0) return;
+                const i = this.smFree[--this.smFreeH];
+                this.smAlive[i] = 1;
+                this.smPx[i] = x + (Math.random() + Math.random() - 1) * .35;
+                this.smPy[i] = y + .05 + Math.random() * .2;
+                this.smPz[i] = z + (Math.random() + Math.random() - 1) * .35;
+                this.smVx[i] = (Math.random() + Math.random() - 1) * .12;
+                this.smVy[i] = .08 + Math.random() * .24;
+                this.smVz[i] = (Math.random() + Math.random() - 1) * .12;
+                this.smL[i] = 0; this.smML[i] = 2.5 + Math.random() * 3;
+                this.aSmOp[i] = opacity;
             }
         });
 
