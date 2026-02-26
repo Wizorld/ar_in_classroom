@@ -154,11 +154,12 @@
                 </a-entity>
 
                 <a-entity id="snappedPot" visible="false" scale="0.2 0.2 0.2" position="-0.1 0.9 0">
-                    <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb"></a-entity>
+                    <a-entity id="snappedPotModel" gltf-model="Assets/Exothermic reaction/Ceramic pot.glb"
+                        animation-mixer="clip: Ceramicpot; loop: once; clampWhenFinished: true"></a-entity>
                 </a-entity>
 
                 <a-entity id="snappedMixture" visible="false" scale="0.1 0.1 0.1" position="-0.1 0.9 0">
-                    <a-entity gltf-model="Assets/Exothermic reaction/Iron Oxide and Aluminium powder.glb"></a-entity>
+                    <!-- Removed mixture GLB as it is now an animation in snappedPot -->
                 </a-entity>
 
                 <a-entity id="snappedStick" visible="false" scale="0.2 0.2 0.2" position="-0.1 1.1 0" rotation="0 0 15">
@@ -186,7 +187,8 @@
         <!-- EVENT MARKER 2: POT (Barcode 1) -->
         <a-marker id="potMarker" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8">
             <a-entity id="potOriginalModel" position="0 0 0" scale="1 1 1">
-                <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb" position="0 0 0"></a-entity>
+                <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb" position="0 0 0"
+                    animation-mixer="clip: Ceramicpot; loop: once; clampWhenFinished: true"></a-entity>
                 <a-text value="POT" color="#FFFFFF" position="0 0.5 0" scale="300 300 300" align="center"></a-text>
             </a-entity>
         </a-marker>
@@ -699,7 +701,8 @@
                     document.getElementById('mixtureMarker').object3D.getWorldPosition(pos);
                     if (mainPos.distanceTo(pos) < experimentState.proximityThreshold) {
                         experimentState.isMixtureAttached = true;
-                        document.getElementById('snappedMixture').setAttribute('visible', 'true');
+                        // Trigger mixture animation in the pot
+                        document.getElementById('snappedPotModel').setAttribute('animation-mixer', "clip: IronOxideandAluminiumpowder; loop: once; clampWhenFinished: true");
                         document.getElementById('mixtureOriginalModel').setAttribute('visible', 'false');
                     }
                 }
