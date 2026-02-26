@@ -72,20 +72,37 @@
 
         #debugPanel {
             position: absolute;
-            top: 10px;
+            top: 70px;
             left: 10px;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.85);
             color: #22d3ee;
-            padding: 15px;
-            border-radius: 12px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            max-width: 280px;
-            z-index: 100;
-            max-height: 200px;
-            overflow-y: auto;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            border: 1px solid rgba(34, 211, 238, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 13px;
+            width: 220px;
+            z-index: 1000;
+            border-left: 4px solid #06b6d4;
+            pointer-events: none;
+        }
+
+        .debug-item {
+            margin: 4px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .status-ok {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .status-wait {
+            color: #94a3b8;
+        }
+
+        .status-active {
+            color: #f59e0b;
         }
 
         .back-btn {
@@ -127,8 +144,11 @@
     </div>
 
     <!-- Debug Panel -->
-    <div id="debugPanel" style="display: none;">
-        <strong>🔍 Debug Info</strong>
+    <div id="debugPanel">
+        <div
+            style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid rgba(34, 211, 238, 0.3); padding-bottom: 4px;">
+            STATION STATUS
+        </div>
         <div id="debugContent"></div>
     </div>
 
@@ -153,7 +173,7 @@
                     <a-entity gltf-model="Assets/Exothermic reaction/Stand.glb"></a-entity>
                 </a-entity>
 
-                <a-entity id="snappedPot" visible="false" scale="0.2 0.2 0.2" position="-0.1 0.9 0">
+                <a-entity id="snappedPot" visible="false" scale="0.5 0.5 0.5" position="-0.1 0.9 0">
                     <a-entity id="snappedPotModel" gltf-model="Assets/Exothermic reaction/Ceramic pot.glb"
                         animation-mixer="clip: Ceramicpot; loop: once; clampWhenFinished: true"></a-entity>
                 </a-entity>
@@ -178,7 +198,7 @@
 
         <!-- EVENT MARKER 1: HEAT (Barcode 0) -->
         <a-marker id="heatMarker" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="8">
-            <a-entity position="0 0 0" scale="3 3 3">
+            <a-entity position="0 0 0" scale="1 1 1">
                 <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0"
                     animation-mixer="clip: Flame"></a-entity>
             </a-entity>
@@ -740,7 +760,33 @@
             }
 
             document.getElementById('tempText').setAttribute('value', Math.round(experimentState.temperature) + '°C');
+            updateDebugUI();
             requestAnimationFrame(animationLoop);
+        }
+
+        function updateDebugUI() {
+            const content = document.getElementById('debugContent');
+            const markers = Array.from(experimentState.activeMarkers).join(', ') || 'none';
+
+            const getStatus = (val) => val ? '<span class="status-ok">✔ COMPLETED</span>' : '<span class="status-wait">⌛ PENDING</span>';
+            const getReactionStatus = () => {
+                if (experimentState.thermiteTriggered) return '<span class="status-active">🔥 ACTIVE</span>';
+                if (experimentState.isStickAttached) return '<span class="status-wait">⏳ IGNITING...</span>';
+                return '<span class="status-wait">⌛ LOCKED</span>';
+            };
+
+            content.innerHTML = `
+                <div class="debug-item"><span>Stand:</span> ${getStatus(experimentState.isStandAttached)}</div>
+                <div class="debug-item"><span>Pot:</span> ${getStatus(experimentState.isPotAttached)}</div>
+                <div class="debug-item"><span>Mixture:</span> ${getStatus(experimentState.isMixtureAttached)}</div>
+                <div class="debug-item"><span>Stick:</span> ${getStatus(experimentState.isStickAttached)}</div>
+                <div class="debug-item" style="margin-top:8px; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.2)">
+                    <span>Reaction:</span> ${getReactionStatus()}
+                </div>
+                <div style="font-size:10px; color:#94a3b8; margin-top:10px;">
+                    Markers visible: ${markers}
+                </div>
+            `;
         }
     </script>
 </body>
