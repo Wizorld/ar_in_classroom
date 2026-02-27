@@ -215,8 +215,6 @@
             <a-entity position="0 0 0" scale="5 5 5">
                 <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"
                     position="0 0 0"></a-entity>
-                <a-text value="🧬 REAGENT" color="#FFFFFF" position="0 0.5 0" scale="0.15 0.15 0.15"
-                    align="center"></a-text>
             </a-entity>
         </a-marker>
 
@@ -250,7 +248,9 @@
             isPotAttached: false,
             isMixtureAttached: false,
             isStickAttached: false,
-            proximityThreshold: 4.0,
+            proximityThreshold: 8.0,
+            currentDistance: 999,
+            proximityTarget: 'none',
             thermiteStartTime: 0,
             thermiteTriggered: false
         };
@@ -670,8 +670,13 @@
             heatMarker.addEventListener('markerLost', () => experimentState.isHeating = false);
 
             document.getElementById('potMarker').addEventListener('markerFound', () => experimentState.activeMarkers.add('pot'));
+            document.getElementById('potMarker').addEventListener('markerLost', () => experimentState.activeMarkers.delete('pot'));
+
             document.getElementById('mixtureMarker').addEventListener('markerFound', () => experimentState.activeMarkers.add('mixture'));
+            document.getElementById('mixtureMarker').addEventListener('markerLost', () => experimentState.activeMarkers.delete('mixture'));
+
             document.getElementById('magnesiumStickMarker').addEventListener('markerFound', () => experimentState.activeMarkers.add('stick'));
+            document.getElementById('magnesiumStickMarker').addEventListener('markerLost', () => experimentState.activeMarkers.delete('stick'));
         }
 
         function animationLoop() {
@@ -682,42 +687,67 @@
                 mainMarker.object3D.getWorldPosition(mainPos);
 
 
-                // Pot
-                if (experimentState.activeMarkers.has('pot') && !experimentState.isPotAttached) {
-                    const pos = new THREE.Vector3();
-                    document.getElementById('potMarker').object3D.getWorldPosition(pos);
-                    if (mainPos.distanceTo(pos) < experimentState.proximityThreshold) {
-                        experimentState.isPotAttached = true;
-                        document.getElementById('snappedPot').setAttribute('visible', 'true');
-                        document.getElementById('potOriginalModel').setAttribute('visible', 'false');
+                // Pot Snapping
+                if (!experimentState.isPotAttached) {
+                    experimentState.proximityTarget = 'Pot';
+                    if (experimentState.activeMarkers.has('pot')) {
+                        const potPos = new THREE.Vector3();
+                        document.getElementById('potMarker').object3D.getWorldPosition(potPos);
+                        const dist = mainPos.distanceTo(potPos);
+                        experimentState.currentDistance = dist;
+
+                        if (dist < experimentState.proximityThreshold) {
+                            experimentState.isPotAttached = true;
+                            document.getElementById('snappedPot').setAttribute('visible', 'true');
+                            document.getElementById('potOriginalModel').setAttribute('visible', 'false');
+                            experimentState.currentDistance = 999;
+                        }
+                    } else {
+                        experimentState.currentDistance = 999;
                     }
                 }
+                // Mixture Snapping
+                else if (!experimentState.isMixtureAttached) {
+                    experimentState.proximityTarget = 'Mixture';
+                    if (experimentState.activeMarkers.has('mixture')) {
+                        const mixPos = new THREE.Vector3();
+                        document.getElementById('mixtureMarker').object3D.getWorldPosition(mixPos);
+                        const dist = mainPos.distanceTo(mixPos);
+                        experimentState.currentDistance = dist;
 
-                // Mixture
-                if (experimentState.activeMarkers.has('mixture') && experimentState.isPotAttached && !experimentState.isMixtureAttached) {
-                    const pos = new THREE.Vector3();
-                    document.getElementById('mixtureMarker').object3D.getWorldPosition(pos);
-                    if (mainPos.distanceTo(pos) < experimentState.proximityThreshold) {
-                        experimentState.isMixtureAttached = true;
-                        // Trigger mixture animation in the pot
-                        document.getElementById('snappedPotModel').setAttribute('animation-mixer', "clip: IronOxideandAluminiumpowder; loop: once; clampWhenFinished: true");
-                        document.getElementById('mixtureOriginalModel').setAttribute('visible', 'false');
+                        if (dist < experimentState.proximityThreshold) {
+                            experimentState.isMixtureAttached = true;
+                            document.getElementById('snappedPotModel').setAttribute('animation-mixer', "clip: IronOxideandAluminiumpowder; loop: once; clampWhenFinished: true");
+                            document.getElementById('mixtureOriginalModel').setAttribute('visible', 'false');
+                            experimentState.currentDistance = 999;
+                        }
+                    } else {
+                        experimentState.currentDistance = 999;
                     }
                 }
+                // Stick Snapping
+                else if (!experimentState.isStickAttached) {
+                    experimentState.proximityTarget = 'Stick';
+                    if (experimentState.activeMarkers.has('stick')) {
+                        const stickPos = new THREE.Vector3();
+                        document.getElementById('magnesiumStickMarker').object3D.getWorldPosition(stickPos);
+                        const dist = mainPos.distanceTo(stickPos);
+                        experimentState.currentDistance = dist;
 
-                // Stick
-                if (experimentState.activeMarkers.has('stick') && experimentState.isMixtureAttached && !experimentState.isStickAttached) {
-                    const pos = new THREE.Vector3();
-                    document.getElementById('magnesiumStickMarker').object3D.getWorldPosition(pos);
-                    if (mainPos.distanceTo(pos) < experimentState.proximityThreshold) {
-                        experimentState.isStickAttached = true;
-                        document.getElementById('snappedStick').setAttribute('visible', 'true');
-                        document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
-
-                        // Start Thermite ignition countdown
-                        experimentState.thermiteStartTime = Date.now();
-                        console.log('⏳ Thermite countdown started... 5s to ignition');
+                        if (dist < experimentState.proximityThreshold) {
+                            experimentState.isStickAttached = true;
+                            document.getElementById('snappedStick').setAttribute('visible', 'true');
+                            document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
+                            experimentState.thermiteStartTime = Date.now();
+                            experimentState.currentDistance = 999;
+                            console.log('⏳ Thermite countdown started... 5s to ignition');
+                        }
+                    } else {
+                        experimentState.currentDistance = 999;
                     }
+                } else {
+                    experimentState.proximityTarget = 'None';
+                    experimentState.currentDistance = 999;
                 }
 
                 // Handle Thermite Trigger (5s Delay)
@@ -763,6 +793,15 @@
                 <div style="font-size:10px; color:#94a3b8; margin-top:10px;">
                     Markers visible: ${markers}
                 </div>
+                ${experimentState.proximityTarget !== 'None' ? `
+                <div style="margin-top:8px; padding:6px; background:rgba(34,211,238,0.1); border-radius:4px; font-size:11px;">
+                    <div style="color:#22d3ee; margin-bottom:2px;">Proximity to ${experimentState.proximityTarget}:</div>
+                    <div style="font-family:monospace; font-size:14px; color:${experimentState.currentDistance < experimentState.proximityThreshold ? '#10b981' : '#f59e0b'}">
+                        ${experimentState.currentDistance > 100 ? '---' : experimentState.currentDistance.toFixed(2)} 
+                        <span style="font-size:10px; color:#64748b">/ ${experimentState.proximityThreshold}</span>
+                    </div>
+                </div>
+                ` : ''}
             `;
         }
     </script>
