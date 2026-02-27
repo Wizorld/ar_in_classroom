@@ -773,7 +773,7 @@
                 experimentState.temperature = Math.max(experimentState.temperature - 1, 25);
             }
 
-            document.getElementById('tempText').setAttribute('value', Math.round(experimentState.temperature) + '°C');
+            //document.getElementById('tempText').setAttribute('value', Math.round(experimentState.temperature) + '°C');
             updateDebugUI();
             requestAnimationFrame(animationLoop);
         }
