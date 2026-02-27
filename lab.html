@@ -155,7 +155,12 @@
     <!-- A-Frame AR Scene -->
     <a-scene id="arScene" embedded
         arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65; sourceWidth:1280; sourceHeight:720; displayWidth: 1280; displayHeight: 720;"
-        vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;">
+        vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true; 
+        antialias: true; 
+        alpha: true;
+        powerPreference: high-performance;
+        physicallyCorrectLights: true;
+        ">
 
         <!-- Assets -->
         <a-assets>
@@ -165,12 +170,8 @@
         <!-- MAIN MARKER (Hiro Pattern - represents the chemistry apparatus) -->
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
-                <a-entity id="snappedSandBox" visible="true" scale="0.5  0.5 0.5" position="0 0 0">
+                <a-entity id="snappedSandBox" visible="true" scale="0.5  0.5 0.5" position="0 0.5 0">
                     <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"></a-entity>
-                </a-entity>
-
-                <a-entity id="snappedStand" visible="false" scale="0.25 0.5 0.25" position="-0.2 0.5 0">
-                    <a-entity gltf-model="Assets/Exothermic reaction/Stand.glb"></a-entity>
                 </a-entity>
 
                 <a-entity id="snappedPot" visible="false" scale="0.5 0.5 0.5" position="-0.1 0.9 0">
@@ -219,13 +220,6 @@
             </a-entity>
         </a-marker>
 
-        <!-- EVENT MARKER 4: TRIPOD STAND (Barcode 3) -->
-        <a-marker id="tripodStandMarker" type="barcode" value="3" emitevents="true" smooth="true" smoothCount="8">
-            <a-entity id="standOriginalModel" position="0 0 0" scale="5 5 5">
-                <a-entity gltf-model="Assets/Exothermic reaction/Stand.glb" position="0 0 0"></a-entity>
-                <a-text value="TRIPOD" color="#FFFFFF" position="0 0.5 0" scale="0.2 0.2 0.2" align="center"></a-text>
-            </a-entity>
-        </a-marker>
 
         <!-- EVENT MARKER 5: MIXTURE (Barcode 4) -->
         <a-marker id="mixtureMarker" type="barcode" value="7" emitevents="true" smooth="true" smoothCount="8">
@@ -253,7 +247,6 @@
             temperature: 25,
             isHeating: false,
             activeMarkers: new Set(),
-            isStandAttached: false,
             isPotAttached: false,
             isMixtureAttached: false,
             isStickAttached: false,
@@ -270,7 +263,7 @@
                     maxSparks: 20000,
                     maxSmoke: 1200,
                     gravity: -9.81,
-                    groundY: -0.9,
+                    groundY: 0,
                     totalTime: 10.0,
                     phases: [
                         { id: 1, start: 0.0, end: 2.0 },
@@ -677,7 +670,6 @@
             heatMarker.addEventListener('markerLost', () => experimentState.isHeating = false);
 
             document.getElementById('potMarker').addEventListener('markerFound', () => experimentState.activeMarkers.add('pot'));
-            document.getElementById('tripodStandMarker').addEventListener('markerFound', () => experimentState.activeMarkers.add('stand'));
             document.getElementById('mixtureMarker').addEventListener('markerFound', () => experimentState.activeMarkers.add('mixture'));
             document.getElementById('magnesiumStickMarker').addEventListener('markerFound', () => experimentState.activeMarkers.add('stick'));
         }
@@ -689,19 +681,9 @@
                 const mainPos = new THREE.Vector3();
                 mainMarker.object3D.getWorldPosition(mainPos);
 
-                // Stand
-                if (experimentState.activeMarkers.has('stand') && !experimentState.isStandAttached) {
-                    const pos = new THREE.Vector3();
-                    document.getElementById('tripodStandMarker').object3D.getWorldPosition(pos);
-                    if (mainPos.distanceTo(pos) < experimentState.proximityThreshold) {
-                        experimentState.isStandAttached = true;
-                        document.getElementById('snappedStand').setAttribute('visible', 'true');
-                        document.getElementById('standOriginalModel').setAttribute('visible', 'false');
-                    }
-                }
 
                 // Pot
-                if (experimentState.activeMarkers.has('pot') && experimentState.isStandAttached && !experimentState.isPotAttached) {
+                if (experimentState.activeMarkers.has('pot') && !experimentState.isPotAttached) {
                     const pos = new THREE.Vector3();
                     document.getElementById('potMarker').object3D.getWorldPosition(pos);
                     if (mainPos.distanceTo(pos) < experimentState.proximityThreshold) {
@@ -772,7 +754,6 @@
             };
 
             content.innerHTML = `
-                <div class="debug-item"><span>Stand:</span> ${getStatus(experimentState.isStandAttached)}</div>
                 <div class="debug-item"><span>Pot:</span> ${getStatus(experimentState.isPotAttached)}</div>
                 <div class="debug-item"><span>Mixture:</span> ${getStatus(experimentState.isMixtureAttached)}</div>
                 <div class="debug-item"><span>Stick:</span> ${getStatus(experimentState.isStickAttached)}</div>
