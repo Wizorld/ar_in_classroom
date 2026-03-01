@@ -253,7 +253,8 @@
             proximityThreshold: 8.0,
             currentDistance: 999,
             proximityTarget: 'none',
-            thermiteStartTime: 0,
+            thermiteStartTime: 0, // Used for completion tracking
+            thermiteIgnitionTimer: 0, // Added for heatmap application timer
             thermiteTriggered: false,
             thermiteCompleted: false
         };
@@ -747,9 +748,8 @@
                             experimentState.isStickAttached = true;
                             document.getElementById('snappedStick').setAttribute('visible', 'true');
                             document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
-                            experimentState.thermiteStartTime = Date.now();
                             experimentState.currentDistance = 999;
-                            console.log('⏳ Thermite countdown started... 5s to ignition');
+                            console.log('✅ Stick attached. Use lighter to ignite fuse (5s)');
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -759,19 +759,29 @@
                     experimentState.currentDistance = 999;
                 }
 
-                // Handle Thermite Trigger (5s Delay)
+                // Handle Thermite Trigger (5s continuous application of lighter)
                 if (experimentState.isStickAttached && !experimentState.thermiteTriggered) {
-                    const elapsed = (Date.now() - experimentState.thermiteStartTime) / 1000;
-                    if (elapsed >= 5.0) {
-                        console.log('💥 THERMITE IGNITION!');
-                        experimentState.thermiteTriggered = true;
-                        document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
+                    if (experimentState.activeMarkers.has('heat')) {
+                        // Approximate dt as 16.6ms since we don't have it in animationLoop
+                        experimentState.thermiteIgnitionTimer += 0.0166;
+
+                        if (experimentState.thermiteIgnitionTimer >= 5.0) {
+                            console.log('💥 THERMITE IGNITION!');
+                            experimentState.thermiteTriggered = true;
+                            experimentState.thermiteStartTime = Date.now(); // Set for completion tracking
+                            document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
+                        }
+                    } else {
+                        // Reset timer if lighter is removed? 
+                        // Let's keep it for better UX, or let it decay slowly. 
+                        // Decaying slowly is a good middle ground.
+                        experimentState.thermiteIgnitionTimer = Math.max(0, experimentState.thermiteIgnitionTimer - 0.01);
                     }
                 }
 
-                // Handle Thermite Completion (10s reaction after 5s ignition = 15s total)
+                // Handle Thermite Completion (10s reaction after ignition)
                 if (experimentState.thermiteTriggered && !experimentState.thermiteCompleted) {
-                    const elapsedSinceIgnition = (Date.now() - (experimentState.thermiteStartTime + 5000)) / 1000;
+                    const elapsedSinceIgnition = (Date.now() - experimentState.thermiteStartTime) / 1000;
                     if (elapsedSinceIgnition >= 10.0) {
                         console.log('🏁 THERMITE REACTION COMPLETED');
                         experimentState.thermiteCompleted = true;
@@ -832,6 +842,20 @@
                 <div class="debug-item" style="margin-top:8px; padding-top:4px; border-top:1px dashed rgba(255,255,255,0.2)">
                     <span>REACTION:</span> ${getReactionStatus()}
                 </div>
+
+                ${experimentState.isStickAttached && !experimentState.thermiteTriggered ? `
+                <div style="margin-top:12px; padding:8px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.2); border-radius:6px;">
+                    <div style="color:#f59e0b; font-size:11px; font-weight:bold; margin-bottom:6px; text-transform:uppercase;">
+                        Igniting Fuse...
+                    </div>
+                    <div style="height:6px; background:rgba(0,0,0,0.3); border-radius:3px; overflow:hidden;">
+                        <div style="width:${(experimentState.thermiteIgnitionTimer / 5 * 100)}%; height:100%; background:#f59e0b; transition: width 0.1s linear;"></div>
+                    </div>
+                    <div style="font-size:10px; color:#94a3b8; margin-top:6px;">
+                        ${experimentState.activeMarkers.has('heat') ? '🔥 Lighter detected (Hold for 5s)' : '⚠ Bring lighter near stick'}
+                    </div>
+                </div>
+                ` : ''}
 
                 ${experimentState.proximityTarget !== 'None' ? `
                 <div style="margin-top:12px; padding:8px; background:rgba(34,211,238,0.1); border:1px solid rgba(34,211,238,0.2); border-radius:6px;">
