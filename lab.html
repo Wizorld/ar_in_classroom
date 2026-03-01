@@ -659,8 +659,8 @@
                 // Trigger Thermite Reaction immediately for testing
                 if (!experimentState.thermiteTriggered) {
                     console.log('🧪 TEST TRIGGER: Thermite Ignition');
-                    experimentState.thermiteTriggered = true;
-                    document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
+                    //experimentState.thermiteTriggered = true;
+                    //document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
                 }
             });
             mainMarker.addEventListener('markerLost', () => experimentState.activeMarkers.delete('main'));
