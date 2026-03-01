@@ -267,7 +267,7 @@
                     maxSparks: 2000,
                     maxSmoke: 200,
                     gravity: -9.81,
-                    groundY: 0,
+                    groundY: 0.1, // Set slightly above base to avoid clipping
                     totalTime: 10.0,
                     phases: [
                         { id: 1, start: 0.0, end: 2.0 },
@@ -293,14 +293,14 @@
                 const texSmoke = radialTex('rgba(180,160,140,.35)', 'rgba(120,100,85,.12)', 'rgba(0,0,0,0)', 128);
                 const texGlow = radialTex('rgba(255,220,120,.9)', 'rgba(255,100,10,.35)', 'rgba(0,0,0,0)', 128);
 
-                this.coreMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-                this.coreMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), this.coreMat);
-                this.coreMesh.rotation.x = -Math.PI / 2; this.coreMesh.position.y = 0.01;
+                this.coreMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide });
+                this.coreMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), this.coreMat);
+                this.coreMesh.position.y = 0.05;
                 this.el.setObject3D('core', this.coreMesh);
 
-                this.haloMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
-                this.haloMesh = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 1.5), this.haloMat);
-                this.haloMesh.rotation.x = -Math.PI / 2; this.haloMesh.position.y = 0.005;
+                this.haloMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide });
+                this.haloMesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16), this.haloMat);
+                this.haloMesh.position.y = 0.04;
                 this.el.setObject3D('halo', this.haloMesh);
 
                 const S = P.maxSparks;
@@ -359,7 +359,7 @@
                 this.sparkMat = new THREE.ShaderMaterial({
                     uniforms: { uTex: { value: texSpark } },
                     vertexShader: SPARK_VERT, fragmentShader: SPARK_FRAG,
-                    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: true
+                    transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false
                 });
                 this.sparkPoints = new THREE.Points(this.sparkGeo, this.sparkMat);
                 this.el.setObject3D('sparks', this.sparkPoints);
@@ -409,7 +409,7 @@
                 this.smMat = new THREE.ShaderMaterial({
                     uniforms: { uTex: { value: texSmoke } },
                     vertexShader: SMOKE_VERT, fragmentShader: SMOKE_FRAG,
-                    transparent: true, blending: THREE.NormalBlending, depthWrite: false, depthTest: true
+                    transparent: true, blending: THREE.NormalBlending, depthWrite: false, depthTest: false
                 });
                 this.smPoints = new THREE.Points(this.smGeo, this.smMat);
                 this.el.setObject3D('smoke', this.smPoints);
