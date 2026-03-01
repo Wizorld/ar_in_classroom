@@ -191,7 +191,7 @@
 
                 <!-- Thermite Reaction Effect (Modular) -->
                 <a-entity id="thermiteEffect" thermite-reaction="active: false" position="0.1 0.82 0"
-                    scale="0.4 0.4 0.4"></a-entity>
+                    scale="0.12 0.12 0.12"></a-entity>
             </a-entity>
         </a-marker>
 
@@ -440,8 +440,8 @@
                     const flicker = .18 + .12 * Math.sin(t * .007) + .08 * Math.sin(t * .019);
                     this.coreMat.opacity = flicker * (0.3 + 0.7 * pp);
                     this.haloMat.opacity = flicker * .12 * pp;
-                    this.coreMesh.scale.setScalar(.4 + .2 * pp);
-                    this.haloMesh.scale.setScalar(.6 + .3 * pp);
+                    this.coreMesh.scale.setScalar(.12 + .06 * pp);
+                    this.haloMesh.scale.setScalar(.18 + .09 * pp);
                     if (Math.random() < rawDt * 4) this.spawnEmber();
                     if (Math.random() < rawDt * 2) this.spawnSmoke(0, 0, 0, .18 + .12 * pp);
                 }
@@ -452,14 +452,14 @@
                     }
                     this.coreMat.opacity = Math.max(0.6, 1.5 - pp * 0.9);
                     this.haloMat.opacity = Math.max(0.25, 0.8 - pp * 0.55);
-                    this.coreMesh.scale.setScalar(2.0 - pp * 0.8);
-                    this.haloMesh.scale.setScalar(3.5 - pp * 1.5);
+                    this.coreMesh.scale.setScalar(.6 - pp * 0.24);
+                    this.haloMesh.scale.setScalar(1.0 - pp * 0.4);
                 }
                 else if (ph === 3) {
                     this.coreMat.opacity = .8 - .5 * pp;
                     this.haloMat.opacity = .3 - .2 * pp;
-                    this.coreMesh.scale.setScalar(1.2 - .5 * pp);
-                    this.haloMesh.scale.setScalar(1.8 - 0.6 * pp);
+                    this.coreMesh.scale.setScalar(.36 - .15 * pp);
+                    this.haloMesh.scale.setScalar(.54 - 0.18 * pp);
                     const rate = (180 - 80 * pp) * rawDt * 60;
                     this.spawnPeak(Math.floor(rate));
                     if (Math.random() < rawDt * 3.5) this.spawnSmoke(0, 0, 0, .3 + .1 * pp);
@@ -467,7 +467,7 @@
                 else if (ph === 4) {
                     this.coreMat.opacity = Math.max(0, .3 - .3 * pp);
                     this.haloMat.opacity = Math.max(0, .1 - .1 * pp);
-                    this.coreMesh.scale.setScalar(Math.max(0.1, 0.6 - .4 * pp));
+                    this.coreMesh.scale.setScalar(Math.max(0.03, 0.18 - .12 * pp));
                     const rate = (80 - 76 * pp) * rawDt * 60;
                     if (rate > 1) this.spawnCooldown(Math.floor(rate));
                     if (Math.random() < rawDt * (2 + 6 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
