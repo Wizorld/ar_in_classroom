@@ -171,7 +171,8 @@
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
                 <a-entity id="snappedSandBox" visible="true" scale="0.5  0.5 0.5" position="0 0.5 0">
-                    <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"></a-entity>
+                    <a-entity id="sandBoxModel" gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"
+                        animation-mixer="clip: Animation_1"></a-entity>
                 </a-entity>
 
                 <a-entity id="snappedPot" visible="false" scale="0.5 0.5 0.5" position="-0.1 0.9 0">
@@ -252,7 +253,8 @@
             currentDistance: 999,
             proximityTarget: 'none',
             thermiteStartTime: 0,
-            thermiteTriggered: false
+            thermiteTriggered: false,
+            thermiteCompleted: false
         };
 
         // --- Thermite Particle System Component (1:1 Port from thermite-staged.html) ---
@@ -765,6 +767,17 @@
                         document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
                     }
                 }
+
+                // Handle Thermite Completion (10s reaction after 5s ignition = 15s total)
+                if (experimentState.thermiteTriggered && !experimentState.thermiteCompleted) {
+                    const elapsedSinceIgnition = (Date.now() - (experimentState.thermiteStartTime + 5000)) / 1000;
+                    if (elapsedSinceIgnition >= 10.0) {
+                        console.log('🏁 THERMITE REACTION COMPLETED');
+                        experimentState.thermiteCompleted = true;
+                        // Switch to Animation_2
+                        document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation_2; loop: once; clampWhenFinished: true");
+                    }
+                }
             }
 
             if (experimentState.isHeating) {
@@ -787,6 +800,7 @@
                 '<span style="color:#64748b; font-size:10px;">⚪ NO SIGNAL</span>';
 
             const getReactionStatus = () => {
+                if (experimentState.thermiteCompleted) return '<span class="status-ok">✔ COMPLETED</span>';
                 if (experimentState.thermiteTriggered) return '<span class="status-active">🔥 ACTIVE</span>';
                 if (experimentState.isStickAttached) return '<span class="status-wait">⏳ IGNITING...</span>';
                 return '<span class="status-wait">⌛ LOCKED</span>';
