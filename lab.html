@@ -465,12 +465,22 @@
                     if (Math.random() < rawDt * 3.5) this.spawnSmoke(0, 0, 0, .3 + .1 * pp);
                 }
                 else if (ph === 4) {
-                    this.coreMat.opacity = Math.max(0, .3 - .3 * pp);
-                    this.haloMat.opacity = Math.max(0, .1 - .1 * pp);
-                    this.coreMesh.scale.setScalar(Math.max(0.03, 0.18 - .12 * pp));
+                    // Gradual fade to a very minimal "hot ember" state
+                    this.coreMat.opacity = Math.max(0.04, .3 - .3 * pp);
+                    this.haloMat.opacity = Math.max(0.01, .1 - .1 * pp);
+                    this.coreMesh.scale.setScalar(Math.max(0.02, 0.18 - .16 * pp));
+                    this.haloMesh.scale.setScalar(Math.max(0.03, 0.3 - .27 * pp));
+
                     const rate = (80 - 76 * pp) * rawDt * 60;
                     if (rate > 1) this.spawnCooldown(Math.floor(rate));
                     if (Math.random() < rawDt * (2 + 6 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
+                }
+                // Final state after reactionTime exceeds totalTime
+                else if (T >= this.P.totalTime) {
+                    this.coreMat.opacity = 0.04;
+                    this.haloMat.opacity = 0.01;
+                    this.coreMesh.scale.setScalar(0.02);
+                    this.haloMesh.scale.setScalar(0.03);
                 }
 
                 for (let i = 0; i < this.S; i++) {
