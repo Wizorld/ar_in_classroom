@@ -897,7 +897,97 @@
             document.getElementById('magnesiumStickMarker').addEventListener('markerLost', () => experimentState.activeMarkers.delete('stick'));
         }
 
+        const quizData = [
+            {
+                question: "Why do we use a Magnesium stick in this experiment?",
+                options: [
+                    "It acts as the main fuel",
+                    "It is a high-temperature fuse",
+                    "It prevents the pot from breaking",
+                    "It changes the flame color"
+                ],
+                correct: 1,
+                feedback: "Correct! Magnesium burns at a very high temperature, providing the activation energy needed to start the thermite reaction."
+            },
+            {
+                question: "What type of reaction is the Thermite process?",
+                options: [
+                    "Endothermic (Absorbs heat)",
+                    "Exothermic (Releases heat)",
+                    "Sublimation",
+                    "Photosynthesis"
+                ],
+                correct: 1,
+                feedback: "Spot on! An exothermic reaction releases intense energy in the form of heat and light."
+            }
+        ];
+
+        function triggerQuiz(index) {
+            if (index >= quizData.length) return;
+            
+            experimentState.quizActive = true;
+            experimentState.currentQuizLevel = index;
+            
+            const quizy = quizData[index];
+            document.getElementById('quizQuestion').textContent = quizy.question;
+            
+            const optionsContainer = document.getElementById('quizOptions');
+            optionsContainer.innerHTML = '';
+            
+            quizy.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn';
+                btn.textContent = opt;
+                btn.onclick = () => handleAnswer(i);
+                optionsContainer.appendChild(btn);
+            });
+            
+            document.getElementById('quizFeedback').className = 'feedback-text';
+            document.getElementById('quizContinueBtn').classList.remove('show');
+            
+            const overlay = document.getElementById('quizOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+        }
+
+        function handleAnswer(selectedIndex) {
+            const quizy = quizData[experimentState.currentQuizLevel];
+            const feedbackEl = document.getElementById('quizFeedback');
+            const options = document.querySelectorAll('.option-btn');
+            
+            // Disable all buttons
+            options.forEach(btn => btn.style.pointerEvents = 'none');
+            
+            if (selectedIndex === quizy.correct) {
+                options[selectedIndex].classList.add('correct');
+                feedbackEl.textContent = quizy.feedback;
+                feedbackEl.className = 'feedback-text show feedback-success';
+                document.getElementById('quizContinueBtn').classList.add('show');
+            } else {
+                options[selectedIndex].classList.add('incorrect');
+                options[quizy.correct].classList.add('correct');
+                feedbackEl.textContent = "Not quite. " + quizy.feedback;
+                feedbackEl.className = 'feedback-text show feedback-error';
+                document.getElementById('quizContinueBtn').classList.add('show');
+            }
+        }
+
+        function closeQuiz() {
+            const overlay = document.getElementById('quizOverlay');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                experimentState.quizActive = false;
+            }, 400);
+        }
+
         function animationLoop() {
+            // Pause all logic if quiz is active
+            if (experimentState.quizActive) {
+                requestAnimationFrame(animationLoop);
+                return;
+            }
+
             const mainMarker = document.getElementById('mainMarker');
 
             if (experimentState.activeMarkers.has('main')) {
@@ -958,6 +1048,9 @@
                             document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
                             experimentState.currentDistance = 999;
                             console.log('✅ Stick attached. Use lighter to ignite fuse (5s)');
+                            
+                            // Trigger Level 1 Quiz
+                            setTimeout(() => triggerQuiz(0), 800);
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -995,6 +1088,9 @@
                         experimentState.thermiteCompleted = true;
                         // Switch to Animation_2
                         document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation_2; loop: once; clampWhenFinished: true");
+                        
+                        // Trigger Level 2 Quiz (Final)
+                        setTimeout(() => triggerQuiz(1), 2000);
                     }
                 }
             }
