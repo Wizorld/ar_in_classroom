@@ -140,6 +140,13 @@
         Back to Menu
     </a>
 
+    <!-- Lab Title -->
+    <div
+        style="position: absolute; top: 20px; left: 20px; z-index: 100; color: white; background: rgba(15, 23, 42, 0.7); padding: 12px 24px; border-radius: 12px; backdrop-filter: blur(8px);">
+        <h1 id="labLabel" style="margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em;">Laboratory
+        </h1>
+    </div>
+
     <!-- Loading Screen -->
     <div id="loadingScreen">
         <div class="spinner"></div>
@@ -655,13 +662,15 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             const params = new URLSearchParams(window.location.search);
-            const experimentType = params.get('experiment') || 'molar-mass';
+            const experimentType = params.get('experiment') || 'exothermic-reaction';
             console.log('🧪 Laboratory initialized for:', experimentType);
 
-            if (experimentType === 'plant-cell') {
-                document.getElementById('labLabel').setAttribute('value', 'Biology Lab');
+            if (experimentType === 'exothermic-reaction') {
+                document.getElementById('labLabel').textContent = 'Exothermic Energy Lab';
+            } else if (experimentType === 'plant-cell') {
+                document.getElementById('labLabel').textContent = 'Biology Lab';
             } else if (experimentType === 'acid-base') {
-                document.getElementById('labLabel').setAttribute('value', 'Titration Lab');
+                document.getElementById('labLabel').textContent = 'Titration Lab';
             }
 
             const scene = document.getElementById('arScene');
