@@ -667,10 +667,8 @@
                 }
                 // Final state after reactionTime exceeds totalTime
                 else if (T >= this.P.totalTime) {
-                    this.coreMat.opacity = 0.04;
-                    this.haloMat.opacity = 0.01;
-                    this.coreMesh.scale.setScalar(0.01);
-                    this.haloMesh.scale.setScalar(0.015);
+                    this.coreMat.opacity = 0;
+                    this.haloMat.opacity = 0;
                 }
 
                 for (let i = 0; i < this.S; i++) {
@@ -738,6 +736,12 @@
                 this.smGeo.getAttribute('aLife').needsUpdate = true;
                 this.smGeo.getAttribute('aSize').needsUpdate = true;
                 this.smGeo.getAttribute('aOpacity').needsUpdate = true;
+
+                // Stop completely when done and all particles cleared
+                if (T >= this.P.totalTime && this.sFreeH === this.S && this.smFreeH === this.SM) {
+                    this.el.setAttribute('visible', false);
+                    this.el.setAttribute('thermite-reaction', 'active', false);
+                }
             },
 
             spawnEmber: function () {
