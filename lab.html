@@ -897,38 +897,70 @@
             document.getElementById('magnesiumStickMarker').addEventListener('markerLost', () => experimentState.activeMarkers.delete('stick'));
         }
 
-        const quizData = [
-            {
-                question: "Why do we use a Magnesium stick in this experiment?",
-                options: [
-                    "It acts as the main fuel",
-                    "It is a high-temperature fuse",
-                    "It prevents the pot from breaking",
-                    "It changes the flame color"
-                ],
-                correct: 1,
-                feedback: "Correct! Magnesium burns at a very high temperature, providing the activation energy needed to start the thermite reaction."
-            },
-            {
-                question: "What type of reaction is the Thermite process?",
-                options: [
-                    "Endothermic (Absorbs heat)",
-                    "Exothermic (Releases heat)",
-                    "Sublimation",
-                    "Photosynthesis"
-                ],
-                correct: 1,
-                feedback: "Spot on! An exothermic reaction releases intense energy in the form of heat and light."
-            }
-        ];
+        const quizPools = {
+            activation: [
+                {
+                    question: "Which element is more reactive—Aluminium or Iron?",
+                    options: ["Aluminium", "Iron", "They are equally reactive", "Neither is reactive"],
+                    correct: 0,
+                    feedback: "Correct! Aluminium's higher reactivity is the reason it can 'steal' oxygen from Iron Oxide in this reaction."
+                },
+                {
+                    question: "In the context of the activity series, why does this reaction work?",
+                    options: ["Iron is more noble", "Aluminium is higher than Iron", "Heat makes Iron more reactive", "Oxygen prefers Iron"],
+                    correct: 1,
+                    feedback: "Exactly. The more reactive metal (Al) displaces the less reactive metal (Fe) from its oxide."
+                }
+            ],
+            setup: [
+                {
+                    question: "What role does the Magnesium ribbon play in this setup?",
+                    options: ["It is the main fuel", "High-temperature fuse", "It stabilizes the pot", "It acts as a coolant"],
+                    correct: 1,
+                    feedback: "Well done! Magnesium provides the intense 'activation energy' needed to jumpstart the Thermite process."
+                }
+            ],
+            reaction: [
+                {
+                    question: "During the reaction, which substance is being oxidized?",
+                    options: ["Iron Oxide", "Aluminium", "Molten Iron", "Magnesium"],
+                    correct: 1,
+                    feedback: "Correct! Aluminium gains oxygen, making it the substance that gets oxidized."
+                },
+                {
+                    question: "What visual clues indicate that this is an exothermic reaction?",
+                    options: ["Intense light and heat", "Color change to blue", "Formation of ice", "The setup gets colder"],
+                    correct: 0,
+                    feedback: "Yes! The dramatic release of heat and blinding light are hallmarks of highly exothermic reactions."
+                }
+            ],
+            integration: [
+                {
+                    question: "Which product of this reaction is used for welding railway tracks?",
+                    options: ["Aluminium Oxide", "Molten Iron", "Magnesium Oxide", "Gaseous Oxygen"],
+                    correct: 1,
+                    feedback: "Exactly. The reaction creates liquid iron at over 2500°C, perfect for joining heavy rail segments."
+                },
+                {
+                    question: "The Thermite process is a classic example of which reaction type?",
+                    options: ["Decomposition", "Neutralization", "Redox (Reduction-Oxidation)", "Double Displacement"],
+                    correct: 2,
+                    feedback: "Spot on. It involves the simultaneous reduction of iron and oxidation of aluminium."
+                }
+            ]
+        };
 
-        function triggerQuiz(index) {
-            if (index >= quizData.length) return;
+        function triggerQuiz(phase) {
+            const pool = quizPools[phase];
+            if (!pool || pool.length === 0) return;
             
             experimentState.quizActive = true;
-            experimentState.currentQuizLevel = index;
             
-            const quizy = quizData[index];
+            // Pick a random question from the pool
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            const quizy = pool[randomIndex];
+            experimentState.activeQuiz = quizy; // Track the current active quiz object
+            
             document.getElementById('quizQuestion').textContent = quizy.question;
             
             const optionsContainer = document.getElementById('quizOptions');
@@ -951,11 +983,10 @@
         }
 
         function handleAnswer(selectedIndex) {
-            const quizy = quizData[experimentState.currentQuizLevel];
+            const quizy = experimentState.activeQuiz;
             const feedbackEl = document.getElementById('quizFeedback');
             const options = document.querySelectorAll('.option-btn');
             
-            // Disable all buttons
             options.forEach(btn => btn.style.pointerEvents = 'none');
             
             if (selectedIndex === quizy.correct) {
@@ -1028,6 +1059,9 @@
                             document.getElementById('snappedPotModel').setAttribute('animation-mixer', "clip: IronOxideandAluminiumpowder; loop: once; clampWhenFinished: true");
                             document.getElementById('mixtureOriginalModel').setAttribute('visible', 'false');
                             experimentState.currentDistance = 999;
+
+                            // Trigger Activation Quiz Pool
+                            setTimeout(() => triggerQuiz('activation'), 1000);
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -1049,8 +1083,8 @@
                             experimentState.currentDistance = 999;
                             console.log('✅ Stick attached. Use lighter to ignite fuse (5s)');
                             
-                            // Trigger Level 1 Quiz
-                            setTimeout(() => triggerQuiz(0), 800);
+                            // Trigger Setup Quiz Pool
+                            setTimeout(() => triggerQuiz('setup'), 800);
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -1071,6 +1105,9 @@
                             experimentState.thermiteTriggered = true;
                             experimentState.thermiteStartTime = Date.now(); // Set for completion tracking
                             document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
+
+                            // Trigger Reaction Quiz Pool (Mid-reaction Check)
+                            setTimeout(() => triggerQuiz('reaction'), 3000);
                         }
                     } else {
                         // Reset timer if lighter is removed? 
@@ -1089,8 +1126,8 @@
                         // Switch to Animation_2
                         document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation_2; loop: once; clampWhenFinished: true");
                         
-                        // Trigger Level 2 Quiz (Final)
-                        setTimeout(() => triggerQuiz(1), 2000);
+                        // Trigger Integration Quiz Pool (Final)
+                        setTimeout(() => triggerQuiz('integration'), 2500);
                     }
                 }
             }
