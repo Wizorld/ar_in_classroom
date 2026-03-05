@@ -128,38 +128,38 @@
             color: #1e293b;
         }
 
-        /* Quiz Overlay Styles */
         #quizOverlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(10px);
+            background: rgba(15, 23, 42, 0.2); /* Much lighter to keep lab visible */
+            backdrop-filter: blur(2px);
             z-index: 2000;
             display: none;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
-            transition: all 0.4s ease;
+            justify-content: flex-end; /* Slide from right */
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .quiz-card {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 24px;
-            padding: 32px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transform: scale(0.9);
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 32px 0 0 32px; /* Rounded only on left */
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 90%;
+            height: 100%;
+            box-shadow: -10px 0 50px rgba(0, 0, 0, 0.3);
+            transform: translateX(100%); /* Start off-screen */
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
         }
 
         #quizOverlay.active .quiz-card {
-            transform: scale(1);
-            opacity: 1;
+            transform: translateX(0);
         }
 
         .quiz-header {
@@ -243,39 +243,31 @@
         }
 
         .quiz-footer {
-            margin-top: 24px;
-            display: flex;
-            justify-content: flex-end;
+            margin-top: auto; /* Pushes content to bottom of panel */
+            padding-top: 32px;
         }
 
         .quiz-continue-btn {
-            padding: 12px 28px;
+            padding: 16px 32px;
             background: linear-gradient(90deg, #0d9488, #06b6d4);
             color: white;
             border: none;
-            border-radius: 12px;
-            font-weight: 600;
+            border-radius: 16px;
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
             visibility: hidden;
             transition: all 0.3s ease;
+            width: 100%; /* Full width in side panel */
+            box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.3);
         }
 
         .quiz-continue-btn.show {
             visibility: visible;
-            animation: fadeIn 0.3s ease-out;
+            animation: slideUp 0.4s ease-out;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 
