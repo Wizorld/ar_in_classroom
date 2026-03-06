@@ -140,20 +140,25 @@
             display: none;
             align-items: center;
             justify-content: flex-end;
-            padding: 24px; /* Added margin from screen edges */
+            padding: 24px;
+            /* Added margin from screen edges */
             transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         .quiz-card {
             background: rgba(255, 255, 255, 0.98);
-            border-radius: 28px; /* Fully rounded corners for a floating look */
+            border-radius: 28px;
+            /* Fully rounded corners for a floating look */
             padding: 40px 32px;
             max-width: 420px;
             width: 100%;
-            height: auto; /* Allow content to define height */
-            max-height: calc(100vh - 48px); /* Ensure it stays within margins */
+            height: auto;
+            /* Allow content to define height */
+            max-height: calc(100vh - 48px);
+            /* Ensure it stays within margins */
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
-            transform: translateX(120%); /* Move further off-screen */
+            transform: translateX(120%);
+            /* Move further off-screen */
             transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex;
             flex-direction: column;
@@ -245,7 +250,8 @@
         }
 
         .quiz-footer {
-            margin-top: auto; /* Pushes content to bottom of panel */
+            margin-top: auto;
+            /* Pushes content to bottom of panel */
             padding-top: 32px;
         }
 
@@ -260,7 +266,8 @@
             cursor: pointer;
             visibility: hidden;
             transition: all 0.3s ease;
-            width: 100%; /* Full width in side panel */
+            width: 100%;
+            /* Full width in side panel */
             box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.3);
         }
 
@@ -269,7 +276,17 @@
             animation: slideUp 0.4s ease-out;
         }
 
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
     </style>
 </head>
 
@@ -388,7 +405,6 @@
             <a-entity id="potOriginalModel" position="0 0 0" scale="1 1 1">
                 <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb" position="0 0 0"
                     animation-mixer="clip: Ceramicpot; loop: once; clampWhenFinished: true"></a-entity>
-                <a-text value="POT" color="#FFFFFF" position="0 0.5 0" scale="300 300 300" align="center"></a-text>
             </a-entity>
         </a-marker>
 
@@ -484,12 +500,12 @@
                 const texGlow = radialTex('rgba(255,220,120,.9)', 'rgba(255,100,10,.35)', 'rgba(0,0,0,0)', 128);
 
                 this.coreMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide });
-                this.coreMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), this.coreMat);
+                this.coreMesh = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), this.coreMat);
                 this.coreMesh.position.y = 0.05;
                 this.el.setObject3D('core', this.coreMesh);
 
                 this.haloMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide });
-                this.haloMesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), this.haloMat);
+                this.haloMesh = new THREE.Mesh(new THREE.SphereGeometry(0.75, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), this.haloMat);
                 this.haloMesh.position.y = 0.04;
                 this.el.setObject3D('halo', this.haloMesh);
 
@@ -951,19 +967,19 @@
         function triggerQuiz(phase) {
             const pool = quizPools[phase];
             if (!pool || pool.length === 0) return;
-            
+
             experimentState.quizActive = true;
-            
+
             // Pick a random question from the pool
             const randomIndex = Math.floor(Math.random() * pool.length);
             const quizy = pool[randomIndex];
             experimentState.activeQuiz = quizy; // Track the current active quiz object
-            
+
             document.getElementById('quizQuestion').textContent = quizy.question;
-            
+
             const optionsContainer = document.getElementById('quizOptions');
             optionsContainer.innerHTML = '';
-            
+
             quizy.options.forEach((opt, i) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
@@ -971,10 +987,10 @@
                 btn.onclick = () => handleAnswer(i);
                 optionsContainer.appendChild(btn);
             });
-            
+
             document.getElementById('quizFeedback').className = 'feedback-text';
             document.getElementById('quizContinueBtn').classList.remove('show');
-            
+
             const overlay = document.getElementById('quizOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
@@ -984,9 +1000,9 @@
             const quizy = experimentState.activeQuiz;
             const feedbackEl = document.getElementById('quizFeedback');
             const options = document.querySelectorAll('.option-btn');
-            
+
             options.forEach(btn => btn.style.pointerEvents = 'none');
-            
+
             if (selectedIndex === quizy.correct) {
                 options[selectedIndex].classList.add('correct');
                 feedbackEl.textContent = quizy.feedback;
@@ -1080,7 +1096,7 @@
                             document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
                             experimentState.currentDistance = 999;
                             console.log('✅ Stick attached. Use lighter to ignite fuse (5s)');
-                            
+
                             // Trigger Setup Quiz Pool
                             setTimeout(() => triggerQuiz('setup'), 800);
                         }
@@ -1123,7 +1139,7 @@
                         experimentState.thermiteCompleted = true;
                         // Switch to Animation_2
                         document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation_2; loop: once; clampWhenFinished: true");
-                        
+
                         // Trigger Integration Quiz Pool (Final)
                         setTimeout(() => triggerQuiz('integration'), 2500);
                     }
