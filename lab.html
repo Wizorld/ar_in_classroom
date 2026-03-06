@@ -484,12 +484,12 @@
                 const texGlow = radialTex('rgba(255,220,120,.9)', 'rgba(255,100,10,.35)', 'rgba(0,0,0,0)', 128);
 
                 this.coreMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide });
-                this.coreMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16), this.coreMat);
+                this.coreMesh = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), this.coreMat);
                 this.coreMesh.position.y = 0.05;
                 this.el.setObject3D('core', this.coreMesh);
 
                 this.haloMat = new THREE.MeshBasicMaterial({ map: texGlow, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false, side: THREE.DoubleSide });
-                this.haloMesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16), this.haloMat);
+                this.haloMesh = new THREE.Mesh(new THREE.SphereGeometry(1.5, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2), this.haloMat);
                 this.haloMesh.position.y = 0.04;
                 this.el.setObject3D('halo', this.haloMesh);
 
