@@ -1075,7 +1075,7 @@
                             experimentState.currentDistance = 999;
 
                             // Trigger Activation Quiz Pool
-                            setTimeout(() => triggerQuiz('activation'), 1000);
+                            setTimeout(() => triggerQuiz('activation'), 5000);
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -1098,7 +1098,7 @@
                             console.log('✅ Stick attached. Use lighter to ignite fuse (5s)');
 
                             // Trigger Setup Quiz Pool
-                            setTimeout(() => triggerQuiz('setup'), 800);
+                            setTimeout(() => triggerQuiz('setup'), 5000);
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -1121,7 +1121,7 @@
                             document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
 
                             // Trigger Reaction Quiz Pool (Mid-reaction Check)
-                            setTimeout(() => triggerQuiz('reaction'), 3000);
+                            setTimeout(() => triggerQuiz('reaction'), 5000);
                         }
                     } else {
                         // Reset timer if lighter is removed? 
@@ -1141,7 +1141,7 @@
                         document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation_2; loop: once; clampWhenFinished: true");
 
                         // Trigger Integration Quiz Pool (Final)
-                        setTimeout(() => triggerQuiz('integration'), 2500);
+                        setTimeout(() => triggerQuiz('integration'), 5000);
                     }
                 }
             }
