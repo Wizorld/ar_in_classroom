@@ -640,6 +640,11 @@
 
                 const ph = getPh(T);
                 const pp = getPP(T, ph);
+                
+                let globalParticleScale = 1.0;
+                if (ph === 3) {
+                    globalParticleScale = Math.max(0.0, 1.0 - pp); // Shrinks from 1 to 0 during cooldown
+                }
 
                 // Handle total completion explicitly before phase logic
                 if (T >= this.P.totalTime) {
@@ -647,6 +652,7 @@
                     this.haloMat.opacity = 0;
                     this.coreMesh.scale.setScalar(0.001);
                     this.haloMesh.scale.setScalar(0.001);
+                    globalParticleScale = 0.0;
                 }
                 else if (ph === 1) { // Immediate Flash
                     if (!this.flashFired) {
@@ -713,7 +719,7 @@
                     this.aSpPos[j] = this.spx[i]; this.aSpPos[j + 1] = this.spy[i]; this.aSpPos[j + 2] = this.spz[i];
                     this.aSpL[i] = age;
                     const bsz = this.sSec[i] ? (1.2 + Math.random() * 2) : (2.8 + Math.random() * 7.2);
-                    this.aSpSz[i] = bsz * (1 - age * .72);
+                    this.aSpSz[i] = bsz * (1 - age * .72) * globalParticleScale;
                     this.aSpBr[i] = .62 + .38 * Math.random();
                     this.aSpP[i] = this.sPhase[i];
                 }
@@ -738,7 +744,7 @@
                     const j = i * 3;
                     this.aSmPos[j] = this.smPx[i]; this.aSmPos[j + 1] = this.smPy[i]; this.aSmPos[j + 2] = this.smPz[i];
                     this.aSmL[i] = age;
-                    this.aSmSz[i] = (2 + Math.random() * 3) * (1 + age * 3.5);
+                    this.aSmSz[i] = (2 + Math.random() * 3) * (1 + age * 3.5) * globalParticleScale;
                     this.aSmOp[i] = 0.5 * (age < 0.1 ? age / 0.1 : (age > 0.7 ? 1 - (age - 0.7) / 0.3 : 1));
                 }
                 this.smGeo.getAttribute('position').needsUpdate = true;
