@@ -700,6 +700,11 @@
                     if (rate > 1) this.spawnCooldown(Math.floor(rate));
                     // Keep some smoke during cooldown
                     if (Math.random() < rawDt * (2 + 4 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
+
+                    // Molten iron dripping from the bottom of the pot
+                    if (pp > 0.2 && Math.random() < rawDt * 18 * pp) {
+                        this.spawnDrip();
+                    }
                 }
 
                 for (let i = 0; i < this.S; i++) {
@@ -719,9 +724,13 @@
                     this.spx[i] += this.svx[i] * rawDt;
                     this.spy[i] += this.svy[i] * rawDt;
                     this.spz[i] += this.svz[i] * rawDt;
-                    if (this.spy[i] <= this.P.groundY) {
-                        this.spy[i] = this.P.groundY;
-                        if (!this.sSec[i] && this.sBnc[i] < 2 && Math.abs(this.svy[i]) > .55) {
+                    let currentGround = this.sPhase[i] === 5 ? -6.0 : this.P.groundY; // -6.0 is sand surface
+                    if (this.spy[i] <= currentGround) {
+                        this.spy[i] = currentGround;
+                        if (this.sPhase[i] === 5) {
+                            // Drip hit the sand surface, cool down in place
+                            this.svy[i] = 0; this.svx[i] = 0; this.svz[i] = 0;
+                        } else if (!this.sSec[i] && this.sBnc[i] < 2 && Math.abs(this.svy[i]) > .55) {
                             this.spawnSecondary(this.spx[i], this.spy[i], this.spz[i], this.svx[i], this.svy[i], this.svz[i], this.sPhase[i]);
                             this.sBnc[i]++;
                             this.svy[i] = Math.abs(this.svy[i]) * (0.08 + Math.random() * 0.18);
@@ -734,8 +743,10 @@
                     const j = i * 3;
                     this.aSpPos[j] = this.spx[i]; this.aSpPos[j + 1] = this.spy[i]; this.aSpPos[j + 2] = this.spz[i];
                     this.aSpL[i] = age;
-                    const bsz = this.sSec[i] ? (1.2 + Math.random() * 2) : (2.8 + Math.random() * 7.2);
-                    this.aSpSz[i] = bsz * (1 - age * .72) * globalParticleScale;
+                    let bsz = this.sSec[i] ? (1.2 + Math.random() * 2) : (2.8 + Math.random() * 7.2);
+                    if (this.sPhase[i] === 5) bsz = 8.0 + Math.random() * 6.0; // Thick molten blob
+                    let scaleMod = this.sPhase[i] === 5 ? 1.0 : globalParticleScale;
+                    this.aSpSz[i] = bsz * (1 - age * .72) * scaleMod;
                     this.aSpBr[i] = .62 + .38 * Math.random();
                     this.aSpP[i] = this.sPhase[i];
                 }
@@ -820,6 +831,20 @@
                     this.svz[i] = Math.sin(a) * cone + (Math.random() + Math.random() - 1) * 1.18 * .28;
                     this.sLife[i] = 0; this.sMaxL[i] = 1.0 + Math.random() * 2.2;
                 }
+            },
+            spawnDrip: function () {
+                if (this.sFreeH === 0) return;
+                const i = this.sFree[--this.sFreeH];
+                this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 5;
+                const r = Math.random() * 1.5;
+                const theta = Math.random() * Math.PI * 2;
+                this.spx[i] = r * Math.cos(theta);
+                this.spy[i] = -4.5 + Math.random() * 0.5; // Start spawning near bottom of pot inside
+                this.spz[i] = r * Math.sin(theta);
+                this.svx[i] = (Math.random() - 0.5) * 0.5;
+                this.svy[i] = -1.0 - Math.random() * 3.0; // Fall down
+                this.svz[i] = (Math.random() - 0.5) * 0.5;
+                this.sLife[i] = 0; this.sMaxL[i] = 3.0 + Math.random() * 2.0; // Last longer on sand
             },
             spawnCooldown: function (n) {
                 for (let s = 0; s < n; s++) {
