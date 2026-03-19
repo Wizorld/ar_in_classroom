@@ -366,6 +366,8 @@
 
         <!-- MAIN MARKER (Hiro Pattern - represents the chemistry apparatus) -->
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
+            <!-- Base to cover QR code -->
+            <a-cylinder position="0 0.01 0" radius="0.8" height="0.02" color="#1e293b" material="roughness: 0.8"></a-cylinder>
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
                 <a-entity id="snappedSandBox" visible="true" scale="0.5  0.5 0.5" position="0 0.5 0">
                     <a-entity id="sandBoxModel" gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"
@@ -394,6 +396,8 @@
 
         <!-- EVENT MARKER 1: HEAT (Barcode 0) -->
         <a-marker id="heatMarker" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="8">
+            <!-- Base to cover QR code -->
+            <a-cylinder position="0 0.01 0" radius="0.8" height="0.02" color="#1e293b" material="roughness: 0.8"></a-cylinder>
             <a-entity position="0 0 0" scale="1 1 1">
                 <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0"
                     animation-mixer="clip: Flame"></a-entity>
@@ -402,6 +406,8 @@
 
         <!-- EVENT MARKER 2: POT (Barcode 1) -->
         <a-marker id="potMarker" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8">
+            <!-- Base to cover QR code -->
+            <a-cylinder position="0 0.01 0" radius="0.8" height="0.02" color="#1e293b" material="roughness: 0.8"></a-cylinder>
             <a-entity id="potOriginalModel" position="0 0 0" scale="2 2 2">
                 <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb" position="0 0 0"
                     animation-mixer="clip: Ceramicpot; loop: once; clampWhenFinished: true"></a-entity>
@@ -410,6 +416,8 @@
 
         <!-- EVENT MARKER 3: REAGENT (Barcode 2) -->
         <a-marker id="sandBoxMarker" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8">
+            <!-- Base to cover QR code -->
+            <a-cylinder position="0 0.01 0" radius="0.8" height="0.02" color="#1e293b" material="roughness: 0.8"></a-cylinder>
             <a-entity position="0 0 0" scale="5 5 5">
                 <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"
                     position="0 0 0"></a-entity>
@@ -419,6 +427,8 @@
 
         <!-- EVENT MARKER 5: MIXTURE (Barcode 4) -->
         <a-marker id="mixtureMarker" type="barcode" value="7" emitevents="true" smooth="true" smoothCount="8">
+            <!-- Base to cover QR code -->
+            <a-cylinder position="0 0.01 0" radius="0.8" height="0.02" color="#1e293b" material="roughness: 0.8"></a-cylinder>
             <a-entity id="mixtureOriginalModel" position="0 0 0" scale="0.2 0.2 0.2">
                 <a-entity gltf-model="Assets/Exothermic reaction/Iron Oxide and Aluminium powder.glb"
                     position="0 0 0"></a-entity>
@@ -428,6 +438,8 @@
 
         <!-- EVENT MARKER 6: MAGNESIUM STICK (Barcode 6) -->
         <a-marker id="magnesiumStickMarker" type="barcode" value="6" emitevents="true" smooth="true" smoothCount="8">
+            <!-- Base to cover QR code -->
+            <a-cylinder position="0 0.01 0" radius="0.8" height="0.02" color="#1e293b" material="roughness: 0.8"></a-cylinder>
             <a-entity id="stickOriginalModel" position="0 0 0" scale="1 1 1">
                 <a-entity gltf-model="Assets/Exothermic reaction/Magnesium Stick.glb" position="0 0 0"></a-entity>
                 <a-text value="STICK" color="#FFFFFF" position="0 0.5 0" scale="0.4 0.4 0.4" align="center"></a-text>
