@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Professional Mirror - React Code Implementation</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.0.0/dist/aframe-extras.min.js"></script>
+  <style>
+    body { margin: 0; font-family: Arial; }
+    #controls {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: monospace;
+      font-size: 12px;
+      z-index: 1000;
+      max-width: 300px;
+    }
+    .control-group {
+      margin-bottom: 10px;
+    }
+    .control-group label {
+      display: block;
+      margin-bottom: 5px;
+      color: #FFC65D;
+    }
+    .control-group input[type="range"] {
+      width: 100%;
+    }
+    .value {
+      color: #EF2D5E;
+      float: right;
+    }
+  </style>
+  <script>
+    // Professional Mirror Reflector Component (from React code)
+    AFRAME.registerComponent('mirror-reflector', {
+      schema: {
+        resolution: { type: 'number', default: 1024 },
+        color: { type: 'color', default: '#aaccff' }
+      },
+
+      init: function() {
+        const THREE = AFRAME.THREE;
+        const el = this.el;
+        
+        const setupMirror = () => {
+          const mesh = el.getObject3D('mesh');
+          if (!mesh) { 
+            setTimeout(setupMirror, 100); 
+            return; 
+          }
+          
+          const res = this.data.resolution;
+          
+          // Create render target
+          this.renderTarget = new THREE.WebGLRenderTarget(res, res, {
+            minFilter: THREE.LinearFilter,
+            magFilter: THREE.LinearFilter,
+            format: THREE.RGBAFormat,
+            type: THREE.HalfFloatType
+          });
+          
+          // Create virtual camera
+          this.virtualCamera = new THREE.PerspectiveCamera(50, 1, 0.1, 1000);
+          
+          // Initialize reflection variables
+          this.reflectorWorldPosition = new THREE.Vector3();
+          this.cameraWorldPosition = new THREE.Vector3();
+          this.rotationMatrix = new THREE.Matrix4();
+          this.lookAtPosition = new THREE.Vector3(0, 0, -1);
+          this.clipPlane = new THREE.Vector4();
+          this.mirrorNormal = new THREE.Vector3();
+          this.view = new THREE.Vector3();
+          this.target = new THREE.Vector3();
+          this.q = new THREE.Vector4();
+          this.textureMatrix = new THREE.Matrix4();
+          
+          // Create mirror material with custom shader
+          const mirrorMaterial = new THREE.ShaderMaterial({
+            uniforms: {
+              tReflection: { value: this.renderTarget.texture },
+              textureMatrix: { value: this.textureMatrix },
+              mirrorColor: { value: new THREE.Color(this.data.color) }
+            },
+            vertexShader: `
+              uniform mat4 textureMatrix;
+              varying vec4 vUvReflection;
+              void main() {
+                vUvReflection = textureMatrix * vec4(position, 1.0);
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+            `,
+            fragmentShader: `
+              uniform sampler2D tReflection;
+              uniform vec3 mirrorColor;
+              varying vec4 vUvReflection;
+              void main() {
+                vec4 reflColor = texture2DProj(tReflection, vUvReflection);
+                gl_FragColor = vec4(reflColor.rgb * mirrorColor, 1.0);
+              }
+            `
+          });
+          
+          mesh.material = mirrorMaterial;
+          this.mirrorMaterial = mirrorMaterial;
+          
+          console.log('✅ Professional mirror created successfully!');
+        };
+        
+        setupMirror();
+      },
+
+      tick: function() {
+        if (!this.virtualCamera || !this.renderTarget) return;
+        
+        const THREE = AFRAME.THREE;
+        const renderer = this.el.sceneEl.renderer;
+        const scene = this.el.sceneEl.object3D;
+        const mainCamera = this.el.sceneEl.camera;
+        
+        if (!mainCamera) return;
+        
+        const mesh = this.el.getObject3D('mesh');
+        if (!mesh) return;
+        
+        // Update matrices
+        mesh.updateMatrixWorld(true);
+        this.rotationMatrix.extractRotation(mesh.matrixWorld);
+        this.mirrorNormal.set(0, 0, 1).applyMatrix4(this.rotationMatrix);
+        
+        // Calculate reflection
+        this.reflectorWorldPosition.setFromMatrixPosition(mesh.matrixWorld);
+        this.cameraWorldPosition.setFromMatrixPosition(mainCamera.matrixWorld);
+        
+        this.view.subVectors(this.reflectorWorldPosition, this.cameraWorldPosition);
+        this.view.reflect(this.mirrorNormal).negate();
+        
+        // Position virtual camera
+        this.virtualCamera.position.copy(this.reflectorWorldPosition).add(this.view);
+        
+        this.lookAtPosition.set(0, 0, -1).applyMatrix4(this.rotationMatrix).add(this.reflectorWorldPosition);
+        this.target.subVectors(this.reflectorWorldPosition, this.lookAtPosition);
+        this.target.reflect(this.mirrorNormal).negate().add(this.reflectorWorldPosition);
+        
+        this.virtualCamera.up.set(0, 1, 0).applyMatrix4(this.rotationMatrix).reflect(this.mirrorNormal);
+        this.virtualCamera.lookAt(this.target);
+        
+        // Copy camera properties
+        if (mainCamera.fov) this.virtualCamera.fov = mainCamera.fov;
+        if (mainCamera.aspect) this.virtualCamera.aspect = mainCamera.aspect;
+        this.virtualCamera.near = mainCamera.near || 0.1;
+        this.virtualCamera.far = mainCamera.far || 1000;
+        this.virtualCamera.updateProjectionMatrix();
+        
+        // Calculate texture matrix
+        this.textureMatrix.set(
+          0.5, 0, 0, 0.5,
+          0, 0.5, 0, 0.5,
+          0, 0, 0.5, 0.5,
+          0, 0, 0, 1
+        );
+        this.textureMatrix.multiply(this.virtualCamera.projectionMatrix);
+        this.textureMatrix.multiply(this.virtualCamera.matrixWorldInverse);
+        this.textureMatrix.multiply(mesh.matrixWorld);
+        
+        // Calculate clipping plane
+        this.mirrorNormal.set(0, 0, 1).applyMatrix4(this.rotationMatrix);
+        this.clipPlane.set(
+          this.mirrorNormal.x,
+          this.mirrorNormal.y,
+          this.mirrorNormal.z,
+          -this.reflectorWorldPosition.dot(this.mirrorNormal)
+        );
+        
+        const cpc = this.clipPlane.clone();
+        cpc.applyMatrix4(this.virtualCamera.matrixWorldInverse.clone().invert().transpose());
+        
+        const pm = this.virtualCamera.projectionMatrix;
+        this.q.x = (Math.sign(cpc.x) + pm.elements[8]) / pm.elements[0];
+        this.q.y = (Math.sign(cpc.y) + pm.elements[9]) / pm.elements[5];
+        this.q.z = -1.0;
+        this.q.w = (1.0 + pm.elements[10]) / pm.elements[14];
+        
+        const ss = 2.0 / cpc.dot(this.q);
+        pm.elements[2] = cpc.x * ss;
+        pm.elements[6] = cpc.y * ss;
+        pm.elements[10] = cpc.z * ss + 1.0;
+        pm.elements[14] = cpc.w * ss;
+        
+        // Render reflection
+        mesh.visible = false;
+        
+        const crt = renderer.getRenderTarget();
+        const cxr = renderer.xr?.enabled;
+        if (renderer.xr) renderer.xr.enabled = false;
+        
+        renderer.setRenderTarget(this.renderTarget);
+        renderer.clear();
+        renderer.render(scene, this.virtualCamera);
+        renderer.setRenderTarget(crt);
+        
+        if (renderer.xr) renderer.xr.enabled = cxr;
+        mesh.visible = true;
+      },
+
+      remove: function() {
+        if (this.renderTarget) this.renderTarget.dispose();
+      }
+    });
+
+    // Custom Fly Controls Component
+    AFRAME.registerComponent('fly-controls', {
+      schema: {
+        acceleration: {type: 'number', default: 20},
+        enabled: {type: 'boolean', default: true}
+      },
+
+      init: function() {
+        this.keys = {};
+        this.velocity = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        
+        this.onKeyDown = this.onKeyDown.bind(this);
+        this.onKeyUp = this.onKeyUp.bind(this);
+        
+        window.addEventListener('keydown', this.onKeyDown);
+        window.addEventListener('keyup', this.onKeyUp);
+      },
+
+      onKeyDown: function(event) {
+        if (!this.data.enabled) return;
+        this.keys[event.code] = true;
+      },
+
+      onKeyUp: function(event) {
+        this.keys[event.code] = false;
+      },
+
+      tick: function(time, timeDelta) {
+        if (!this.data.enabled) return;
+        
+        const el = this.el;
+        const data = this.data;
+        const dt = timeDelta / 1000;
+        
+        // Reset direction
+        this.direction.set(0, 0, 0);
+        
+        // Movement keys
+        if (this.keys['KeyW']) this.direction.z -= 1; // Forward
+        if (this.keys['KeyS']) this.direction.z += 1; // Backward
+        if (this.keys['KeyA']) this.direction.x -= 1; // Left
+        if (this.keys['KeyD']) this.direction.x += 1; // Right
+        if (this.keys['ShiftLeft'] || this.keys['ShiftRight']) this.direction.y += 1; // Up
+        if (this.keys['ControlLeft'] || this.keys['ControlRight']) this.direction.y -= 1; // Down
+        
+        // Normalize direction
+        if (this.direction.length() > 0) {
+          this.direction.normalize();
+          
+          // Apply camera rotation to direction (except Y for up/down)
+          const rotation = el.getAttribute('rotation');
+          const radians = {
+            x: THREE.MathUtils.degToRad(rotation.x),
+            y: THREE.MathUtils.degToRad(rotation.y),
+            z: THREE.MathUtils.degToRad(rotation.z)
+          };
+          
+          // Create rotation matrix
+          const rotationMatrix = new THREE.Matrix4();
+          rotationMatrix.makeRotationFromEuler(new THREE.Euler(radians.x, radians.y, radians.z, 'YXZ'));
+          
+          // Apply rotation to horizontal movement only
+          const horizontalDirection = new THREE.Vector3(this.direction.x, 0, this.direction.z);
+          horizontalDirection.applyMatrix4(rotationMatrix);
+          
+          // Combine with vertical movement
+          const finalDirection = new THREE.Vector3(
+            horizontalDirection.x,
+            this.direction.y, // Keep Y movement world-relative
+            horizontalDirection.z
+          );
+          
+          // Apply movement
+          const position = el.getAttribute('position');
+          const speed = data.acceleration * dt;
+          
+          el.setAttribute('position', {
+            x: position.x + finalDirection.x * speed,
+            y: position.y + finalDirection.y * speed,
+            z: position.z + finalDirection.z * speed
+          });
+        }
+      },
+
+      remove: function() {
+        window.removeEventListener('keydown', this.onKeyDown);
+        window.removeEventListener('keyup', this.onKeyUp);
+      }
+    });
+    AFRAME.registerComponent('gizmo-target', {
+      init: function() {
+        this.el.addEventListener('click', () => {
+          console.log('Object selected:', this.el);
+          // Add visual selection indicator
+          this.addSelectionBox();
+        });
+      },
+
+      addSelectionBox: function() {
+        // Remove old selection
+        const oldBox = this.el.querySelector('[selection-box]');
+        if (oldBox) oldBox.remove();
+        
+        // Add selection box
+        const box = document.createElement('a-entity');
+        box.setAttribute('selection-box', '');
+        box.setAttribute('geometry', 'primitive: box; width: 1.1; height: 1.1; depth: 1.1');
+        box.setAttribute('material', 'color: #00d4ff; opacity: 0.3; transparent: true; wireframe: true');
+        box.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 4000');
+        this.el.appendChild(box);
+      }
+    });
+
+    // Control panel
+    window.addEventListener('DOMContentLoaded', function() {
+      const mirrorGroup = document.querySelector('#mirror-group');
+      const mirrorEl = mirrorGroup.querySelector('[mirror-reflector]');
+      const cameraEl = document.querySelector('[camera]');
+      
+      // Mirror position controls (now controls the entire group)
+      document.getElementById('mirrorX').addEventListener('input', function(e) {
+        const value = parseFloat(e.target.value);
+        document.getElementById('mirrorXValue').textContent = value.toFixed(1);
+        const pos = mirrorGroup.getAttribute('position');
+        mirrorGroup.setAttribute('position', {x: value, y: pos.y, z: pos.z});
+      });
+      
+      document.getElementById('mirrorY').addEventListener('input', function(e) {
+        const value = parseFloat(e.target.value);
+        document.getElementById('mirrorYValue').textContent = value.toFixed(1);
+        const pos = mirrorGroup.getAttribute('position');
+        mirrorGroup.setAttribute('position', {x: pos.x, y: value, z: pos.z});
+      });
+      
+      document.getElementById('mirrorZ').addEventListener('input', function(e) {
+        const value = parseFloat(e.target.value);
+        document.getElementById('mirrorZValue').textContent = value.toFixed(1);
+        const pos = mirrorGroup.getAttribute('position');
+        mirrorGroup.setAttribute('position', {x: pos.x, y: pos.y, z: value});
+      });
+      
+      // Resolution control (targets the mirror inside the group)
+      document.getElementById('resolution').addEventListener('change', function(e) {
+        const value = parseInt(e.target.value);
+        mirrorEl.setAttribute('mirror-reflector', 'resolution', value);
+      });
+    });
+  </script>
+</head>
+<body>
+  <div id="controls">
+    <h3>🪞 Professional Mirror</h3>
+    
+    <div style="margin-bottom: 15px; padding: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 11px;">
+      <strong>Controls:</strong><br>
+      WASD: Move | Mouse: Look<br>
+      <span style="color: #4CAF50;">Shift: Up</span> | <span style="color: #FF5722;">Ctrl: Down</span>
+    </div>
+    
+    <div class="control-group">
+      <label>Mirror X: <span class="value" id="mirrorXValue">0.0</span></label>
+      <input type="range" id="mirrorX" min="-5" max="5" value="0" step="0.1">
+    </div>
+    
+    <div class="control-group">
+      <label>Mirror Y: <span class="value" id="mirrorYValue">2.0</span></label>
+      <input type="range" id="mirrorY" min="0" max="5" value="2" step="0.1">
+    </div>
+    
+    <div class="control-group">
+      <label>Mirror Z: <span class="value" id="mirrorZValue">-4.0</span></label>
+      <input type="range" id="mirrorZ" min="-10" max="2" value="-4" step="0.1">
+    </div>
+    
+    <div class="control-group">
+      <label>Resolution:</label>
+      <select id="resolution">
+        <option value="256">256x256 (Fast)</option>
+        <option value="512">512x512 (Balanced)</option>
+        <option value="1024" selected>1024x1024 (Quality)</option>
+        <option value="2048">2048x2048 (Ultra)</option>
+      </select>
+    </div>
+  </div>
+
+  <a-scene 
+    embedded
+    style="width: 100%; height: 100vh;"
+    vr-mode-ui="enabled: false"
+    renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true">
+    
+    <!-- Lights -->
+    <a-light type="ambient" color="#ffffff" intensity="0.8"></a-light>
+    <a-light type="directional" color="#ffffff" intensity="1.0" position="2 4 3" cast-shadow="true"></a-light>
+    <a-light type="point" color="#ffffff" intensity="0.3" position="-3 3 2"></a-light>
+
+    <!-- Floor -->
+    <a-plane position="0 0 0" rotation="-90 0 0" width="20" height="20" 
+             color="#f5f5f5" roughness="0.2" metalness="0.1"></a-plane>
+
+    <!-- Mirror Group (Mirror + Frame together) -->
+    <a-entity id="mirror-group" position="0 2 -4" rotation="0 0 0" gizmo-target>
+      <!-- Professional Mirror -->
+      <a-box 
+        position="0 0 0" 
+        rotation="0 0 0" 
+        scale="4 3 0.05"
+        mirror-reflector="color: #aaccff; resolution: 1024">
+      </a-box>
+
+      <!-- Mirror Frame -->
+      <!-- Top frame -->
+      <a-box position="0 1.53 0" scale="4.1 0.06 0.08" 
+             color="#333333" metalness="0.3" roughness="0.4"></a-box>
+      <!-- Bottom frame -->
+      <a-box position="0 -1.53 0" scale="4.1 0.06 0.08" 
+             color="#333333" metalness="0.3" roughness="0.4"></a-box>
+      <!-- Left frame -->
+      <a-box position="-2.03 0 0" scale="0.06 3.16 0.08" 
+             color="#333333" metalness="0.3" roughness="0.4"></a-box>
+      <!-- Right frame -->
+      <a-box position="2.03 0 0" scale="0.06 3.16 0.08" 
+             color="#333333" metalness="0.3" roughness="0.4"></a-box>
+    </a-entity>
+
+    <!-- Decorative objects (all selectable) -->
+    <a-sphere position="-2 1.5 -1" radius="0.5" color="#ff6b6b" 
+              metalness="0.1" roughness="0.3" gizmo-target></a-sphere>
+    
+    <a-cylinder position="2 1.75 -2" radius="0.3" height="1.5" color="#4ecdc4" 
+                metalness="0.1" roughness="0.3" gizmo-target></a-cylinder>
+    
+    <a-box position="-1.5 1.4 1.5" scale="0.8 0.8 0.8" color="#45b7d1" 
+           metalness="0.1" roughness="0.3" gizmo-target
+           animation="property: rotation; to: 360 360 0; loop: true; dur: 4000"></a-box>
+
+    <!-- Sky -->
+    <a-sky color="#ffffff"></a-sky>
+
+    <!-- Camera -->
+    <a-entity position="0 2 5" rotation="0 0 0">
+      <a-entity camera look-controls fly-controls="acceleration: 15"></a-entity>
+    </a-entity>
+  </a-scene>
+</body>
+</html>
