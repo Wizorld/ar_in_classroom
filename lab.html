@@ -744,9 +744,13 @@
                     this.aSpPos[j] = this.spx[i]; this.aSpPos[j + 1] = this.spy[i]; this.aSpPos[j + 2] = this.spz[i];
                     this.aSpL[i] = age;
                     let bsz = this.sSec[i] ? (1.2 + Math.random() * 2) : (2.8 + Math.random() * 7.2);
-                    if (this.sPhase[i] === 5) bsz = 8.0 + Math.random() * 6.0; // Thick molten blob
+                    let sizeFade = 0.72;
+                    if (this.sPhase[i] === 5) {
+                        bsz = 18.0 + Math.random() * 10.0; // Extra thick molten blob
+                        sizeFade = 0.2; // Don't shrink much over time
+                    }
                     let scaleMod = this.sPhase[i] === 5 ? 1.0 : globalParticleScale;
-                    this.aSpSz[i] = bsz * (1 - age * .72) * scaleMod;
+                    this.aSpSz[i] = bsz * (1 - age * sizeFade) * scaleMod;
                     this.aSpBr[i] = .62 + .38 * Math.random();
                     this.aSpP[i] = this.sPhase[i];
                 }
@@ -836,15 +840,20 @@
                 if (this.sFreeH === 0) return;
                 const i = this.sFree[--this.sFreeH];
                 this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 5;
-                const r = Math.random() * 1.5;
+                const r = Math.random() * 0.5; // Keep drips tight to center
                 const theta = Math.random() * Math.PI * 2;
                 this.spx[i] = r * Math.cos(theta);
-                this.spy[i] = -4.5 + Math.random() * 0.5; // Start spawning near bottom of pot inside
+                this.spy[i] = 0.0 + Math.random() * 0.5; // Start spawning inside the pot
                 this.spz[i] = r * Math.sin(theta);
-                this.svx[i] = (Math.random() - 0.5) * 0.5;
-                this.svy[i] = -1.0 - Math.random() * 3.0; // Fall down
-                this.svz[i] = (Math.random() - 0.5) * 0.5;
-                this.sLife[i] = 0; this.sMaxL[i] = 3.0 + Math.random() * 2.0; // Last longer on sand
+                this.svx[i] = (Math.random() - 0.5) * 0.2; // minimal horizontal spread
+                this.svy[i] = -1.0 - Math.random() * 2.0; // Fall slowly
+                this.svz[i] = (Math.random() - 0.5) * 0.2;
+                this.sLife[i] = 0; this.sMaxL[i] = 4.0 + Math.random() * 2.0;
+
+                // Log ~10% of spawns for debugging
+                if (Math.random() < 0.1) {
+                    console.log(`[DEBUG - Thermite] Molten Iron Drip Spawned. Local Y: ${this.spy[i].toFixed(2)} Target Y: -6.0 Size: Large`);
+                }
             },
             spawnCooldown: function (n) {
                 for (let s = 0; s < n; s++) {
