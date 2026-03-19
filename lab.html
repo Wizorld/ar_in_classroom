@@ -490,11 +490,11 @@
                     maxSmoke: 200,
                     gravity: -9.81,
                     groundY: 0.1, // Set slightly above base to avoid clipping
-                    totalTime: 10.0,
+                    totalTime: 18.0,
                     phases: [
                         { id: 1, start: 0.0, end: 0.5 },   // Flash (Full size instantly)
                         { id: 2, start: 0.5, end: 5.0 },   // Peak reaction
-                        { id: 3, start: 5.0, end: 10.0 }   // Cooldown (Shrink to pea)
+                        { id: 3, start: 5.0, end: 18.0 }   // Extended Cooldown with molten drops
                     ]
                 };
                 this.P = P;
@@ -702,7 +702,8 @@
                     if (Math.random() < rawDt * (2 + 4 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
 
                     // Molten iron dripping from the bottom of the pot
-                    if (pp > 0.2 && Math.random() < rawDt * 18 * pp) {
+                    // (Spawns heavily throughout extended cooldown)
+                    if (pp > 0.05 && Math.random() < rawDt * 10) {
                         this.spawnDrip();
                     }
                 }
@@ -850,10 +851,8 @@
                 this.svz[i] = (Math.random() - 0.5) * 0.2;
                 this.sLife[i] = 0; this.sMaxL[i] = 4.0 + Math.random() * 2.0;
 
-                // Log ~10% of spawns for debugging
-                if (Math.random() < 0.1) {
-                    console.log(`[DEBUG - Thermite] Molten Iron Drip Spawned. Local Y: ${this.spy[i].toFixed(2)} Target Y: -6.0 Size: Large`);
-                }
+                // Unconditional log for aggressive debugging
+                console.log(`[DEBUG - Thermite] Molten Iron Drip Spawned! Local Y: ${this.spy[i].toFixed(2)} Target Y: -6.0 Size: ${this.sMaxL[i].toFixed(1)}`);
             },
             spawnCooldown: function (n) {
                 for (let s = 0; s < n; s++) {
@@ -1180,10 +1179,11 @@
                     }
                 }
 
-                // Handle Thermite Completion (10s reaction after ignition)
+                // Handle Thermite Completion (18s reaction after ignition, synced with visual effect)
                 if (experimentState.thermiteTriggered && !experimentState.thermiteCompleted) {
-                    const elapsedSinceIgnition = (Date.now() - experimentState.thermiteStartTime) / 1000;
-                    if (elapsedSinceIgnition >= 10.0) {
+                    const effectEl = document.getElementById('thermiteEffect');
+                    const reactionTime = effectEl && effectEl.components['thermite-reaction'] ? effectEl.components['thermite-reaction'].reactionTime : 0;
+                    if (reactionTime >= 18.0) {
                         console.log('🏁 THERMITE REACTION COMPLETED');
                         experimentState.thermiteCompleted = true;
                         // Switch to Animation_2
