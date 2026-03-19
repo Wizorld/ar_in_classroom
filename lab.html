@@ -645,35 +645,38 @@
                 if (T >= this.P.totalTime) {
                     this.coreMat.opacity = 0;
                     this.haloMat.opacity = 0;
+                    this.coreMesh.scale.setScalar(0.001);
+                    this.haloMesh.scale.setScalar(0.001);
                 }
                 else if (ph === 1) { // Immediate Flash
                     if (!this.flashFired) {
                         this.flashFired = true;
                         this.spawnIgnitionBurst(700);
                     }
-                    this.coreMat.opacity = Math.max(0.6, 1.5 - pp * 0.9);
-                    this.haloMat.opacity = Math.max(0.25, 0.8 - pp * 0.55);
-                    this.coreMesh.scale.setScalar(.3 - pp * 0.12);
-                    this.haloMesh.scale.setScalar(.5 - pp * 0.2);
+                    this.coreMat.opacity = Math.max(0.6, 1.2 - pp * 0.6);
+                    this.haloMat.opacity = Math.max(0.25, 0.6 - pp * 0.35);
+                    this.coreMesh.scale.setScalar(.15 - pp * 0.08); // Starts at 0.15, ends at 0.07
+                    this.haloMesh.scale.setScalar(.25 - pp * 0.15); // Starts at 0.25, ends at 0.10
                 }
                 else if (ph === 2) { // Peak Reaction
-                    this.coreMat.opacity = .8 - .5 * pp;
-                    this.haloMat.opacity = .3 - .2 * pp;
-                    this.coreMesh.scale.setScalar(.18 - .075 * pp);
-                    this.haloMesh.scale.setScalar(.27 - 0.09 * pp);
+                    this.coreMat.opacity = .6 - .4 * pp; // 0.6 down to 0.2
+                    this.haloMat.opacity = .25 - .15 * pp; // 0.25 down to 0.1
+                    this.coreMesh.scale.setScalar(.07 - .04 * pp); // 0.07 down to 0.03
+                    this.haloMesh.scale.setScalar(.10 - .06 * pp); // 0.10 down to 0.04
                     const rate = (180 - 80 * pp) * rawDt * 60;
                     this.spawnPeak(Math.floor(rate));
                     if (Math.random() < rawDt * 3.5) this.spawnSmoke(0, 0, 0, .3 + .1 * pp);
                 }
-                else if (ph === 3) { // Cooldown (Pea size)
-                    // Gradual fade to a very minimal "hot ember" state (pea size)
-                    this.coreMat.opacity = Math.max(0.04, .3 - .3 * pp);
-                    this.haloMat.opacity = Math.max(0.01, .1 - .1 * pp);
-                    this.coreMesh.scale.setScalar(Math.max(0.01, 0.09 - .08 * pp));
-                    this.haloMesh.scale.setScalar(Math.max(0.015, 0.15 - .135 * pp));
+                else if (ph === 3) { // Cooldown (Fade significantly)
+                    // Fades away entirely so the pot becomes clearly visible
+                    this.coreMat.opacity = Math.max(0.0, 0.2 - 0.2 * pp);
+                    this.haloMat.opacity = Math.max(0.0, 0.1 - 0.1 * pp);
+                    this.coreMesh.scale.setScalar(Math.max(0.001, 0.03 - 0.03 * pp)); // 0.03 down to ~0
+                    this.haloMesh.scale.setScalar(Math.max(0.001, 0.04 - 0.04 * pp)); // 0.04 down to ~0
 
                     const rate = (80 - 76 * pp) * rawDt * 60;
                     if (rate > 1) this.spawnCooldown(Math.floor(rate));
+                    // Keep some smoke during cooldown
                     if (Math.random() < rawDt * (2 + 4 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
                 }
 
