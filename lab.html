@@ -476,10 +476,9 @@
                     groundY: 0.1, // Set slightly above base to avoid clipping
                     totalTime: 10.0,
                     phases: [
-                        { id: 1, start: 0.0, end: 2.0 },
-                        { id: 2, start: 2.0, end: 2.5 },
-                        { id: 3, start: 2.5, end: 6.0 },
-                        { id: 4, start: 6.0, end: 10.0 }
+                        { id: 1, start: 0.0, end: 0.5 },   // Flash (Full size instantly)
+                        { id: 2, start: 0.5, end: 5.0 },   // Peak reaction
+                        { id: 3, start: 5.0, end: 10.0 }   // Cooldown (Shrink to pea)
                     ]
                 };
                 this.P = P;
@@ -632,26 +631,22 @@
 
                 const getPh = (t) => {
                     for (const ph of this.P.phases) if (t >= ph.start && t < ph.end) return ph.id;
-                    return 4;
+                    return this.P.phases[this.P.phases.length - 1].id;
                 };
                 const getPP = (t, id) => {
-                    const ph = this.P.phases[id - 1];
+                    const ph = this.P.phases.find(p => p.id === id);
                     return Math.max(0, Math.min(1, (t - ph.start) / (ph.end - ph.start)));
                 };
 
                 const ph = getPh(T);
                 const pp = getPP(T, ph);
 
-                if (ph === 1) {
-                    const flicker = .18 + .12 * Math.sin(t * .007) + .08 * Math.sin(t * .019);
-                    this.coreMat.opacity = flicker * (0.3 + 0.7 * pp);
-                    this.haloMat.opacity = flicker * .12 * pp;
-                    this.coreMesh.scale.setScalar(.06 + .03 * pp);
-                    this.haloMesh.scale.setScalar(.09 + .045 * pp);
-                    if (Math.random() < rawDt * 4) this.spawnEmber();
-                    if (Math.random() < rawDt * 2) this.spawnSmoke(0, 0, 0, .18 + .12 * pp);
+                // Handle total completion explicitly before phase logic
+                if (T >= this.P.totalTime) {
+                    this.coreMat.opacity = 0;
+                    this.haloMat.opacity = 0;
                 }
-                else if (ph === 2) {
+                else if (ph === 1) { // Immediate Flash
                     if (!this.flashFired) {
                         this.flashFired = true;
                         this.spawnIgnitionBurst(700);
@@ -661,7 +656,7 @@
                     this.coreMesh.scale.setScalar(.3 - pp * 0.12);
                     this.haloMesh.scale.setScalar(.5 - pp * 0.2);
                 }
-                else if (ph === 3) {
+                else if (ph === 2) { // Peak Reaction
                     this.coreMat.opacity = .8 - .5 * pp;
                     this.haloMat.opacity = .3 - .2 * pp;
                     this.coreMesh.scale.setScalar(.18 - .075 * pp);
@@ -670,8 +665,8 @@
                     this.spawnPeak(Math.floor(rate));
                     if (Math.random() < rawDt * 3.5) this.spawnSmoke(0, 0, 0, .3 + .1 * pp);
                 }
-                else if (ph === 4) {
-                    // Gradual fade to a very minimal "hot ember" state
+                else if (ph === 3) { // Cooldown (Pea size)
+                    // Gradual fade to a very minimal "hot ember" state (pea size)
                     this.coreMat.opacity = Math.max(0.04, .3 - .3 * pp);
                     this.haloMat.opacity = Math.max(0.01, .1 - .1 * pp);
                     this.coreMesh.scale.setScalar(Math.max(0.01, 0.09 - .08 * pp));
@@ -679,12 +674,7 @@
 
                     const rate = (80 - 76 * pp) * rawDt * 60;
                     if (rate > 1) this.spawnCooldown(Math.floor(rate));
-                    if (Math.random() < rawDt * (2 + 6 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
-                }
-                // Final state after reactionTime exceeds totalTime
-                else if (T >= this.P.totalTime) {
-                    this.coreMat.opacity = 0;
-                    this.haloMat.opacity = 0;
+                    if (Math.random() < rawDt * (2 + 4 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
                 }
 
                 for (let i = 0; i < this.S; i++) {
