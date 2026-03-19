@@ -746,7 +746,7 @@
                     let bsz = this.sSec[i] ? (1.2 + Math.random() * 2) : (2.8 + Math.random() * 7.2);
                     let sizeFade = 0.72;
                     if (this.sPhase[i] === 5) {
-                        bsz = 18.0 + Math.random() * 10.0; // Extra thick molten blob
+                        bsz = 1.5 + Math.random() * 1.0; // Scaled down by ~90%
                         sizeFade = 0.2; // Don't shrink much over time
                     }
                     let scaleMod = this.sPhase[i] === 5 ? 1.0 : globalParticleScale;
