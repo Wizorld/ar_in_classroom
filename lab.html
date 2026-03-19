@@ -486,8 +486,8 @@
             schema: { active: { default: false } },
             init: function () {
                 const P = {
-                    maxSparks: 2000,
-                    maxSmoke: 200,
+                    maxSparks: 5000,
+                    maxSmoke: 500,
                     gravity: -9.81,
                     groundY: 0.1, // Set slightly above base to avoid clipping
                     totalTime: 18.0,
@@ -696,16 +696,15 @@
                     this.coreMesh.scale.setScalar(Math.max(0.001, 0.03 - 0.03 * pp)); // 0.03 down to ~0
                     this.haloMesh.scale.setScalar(Math.max(0.001, 0.04 - 0.04 * pp)); // 0.04 down to ~0
 
+                    // Molten iron dripping from the bottom of the pot (HIGH PRIORITY)
+                    if (pp > 0.05 && Math.random() < rawDt * 25) {
+                        this.spawnDrip();
+                    }
+
                     const rate = (80 - 76 * pp) * rawDt * 60;
                     if (rate > 1) this.spawnCooldown(Math.floor(rate));
                     // Keep some smoke during cooldown
                     if (Math.random() < rawDt * (2 + 4 * pp)) this.spawnSmoke(0, 0, 0, .4 + .3 * pp);
-
-                    // Molten iron dripping from the bottom of the pot
-                    // (Spawns heavily throughout extended cooldown)
-                    if (pp > 0.05 && Math.random() < rawDt * 10) {
-                        this.spawnDrip();
-                    }
                 }
 
                 for (let i = 0; i < this.S; i++) {
@@ -838,7 +837,10 @@
                 }
             },
             spawnDrip: function () {
-                if (this.sFreeH === 0) return;
+                if (this.sFreeH === 0) {
+                    console.log("[DEBUG - Thermite] WARNING: Spark pool is completely exhausted! Cannot spawn drip.");
+                    return;
+                }
                 const i = this.sFree[--this.sFreeH];
                 this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 5;
                 const r = Math.random() * 0.5; // Keep drips tight to center
@@ -852,7 +854,7 @@
                 this.sLife[i] = 0; this.sMaxL[i] = 4.0 + Math.random() * 2.0;
 
                 // Unconditional log for aggressive debugging
-                console.log(`[DEBUG - Thermite] Molten Iron Drip Spawned! Local Y: ${this.spy[i].toFixed(2)} Target Y: -6.0 Size: ${this.sMaxL[i].toFixed(1)}`);
+                console.log(`[DEBUG - Thermite] Molten Iron Drip Spawned! Local Y: ${this.spy[i].toFixed(2)} Target Y: -6.0 Size: ${this.sMaxL[i].toFixed(1)} FreeSlots: ${this.sFreeH}`);
             },
             spawnCooldown: function (n) {
                 for (let s = 0; s < n; s++) {
