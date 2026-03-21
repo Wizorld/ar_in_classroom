@@ -1,112 +1,119 @@
 import * as THREE from 'three';
 
-// --- Scene Setup ---
 const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.z = 8;
-camera.position.y = -2;
+const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+camera.position.z = 1;
 
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
-// --- Shader Material ---
+const geometry = new THREE.PlaneGeometry(2, 2);
+
 const uniforms = {
-    uTime: { value: 0.0 }
+    uTime: { value: 0.0 },
+    uResolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
 };
 
 const vertexShader = `
-    varying vec3 vPosition;
-    varying vec3 vNormal;
-    uniform float uTime;
-
+    varying vec2 vUv;
     void main() {
-        vNormal = normalize(normalMatrix * normal);
-        vec3 pos = position;
-        
-        // Create a repeating drip cycle (0.0 to 1.0)
-        float cycle = fract(uTime * 0.4); 
-        float dripProgress = smoothstep(0.0, 0.8, cycle);
-        
-        // Only deform the bottom half of the cylinder
-        if (pos.y < 1.0) {
-            // Move downwards
-            pos.y -= dripProgress * 6.0;
-            
-            // Calculate "necking" effect based on vertical position
-            // This thins the mesh as it stretches
-            float neck = 1.0 - (dripProgress * exp(-pow(pos.y + 1.0, 2.0) * 0.5));
-            pos.xz *= max(neck, 0.1); 
-        }
-        
-        vPosition = pos;
-        gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+        vUv = uv;
+        gl_Position = vec4(position, 1.0);
     }
 `;
 
 const fragmentShader = `
-    varying vec3 vPosition;
-    varying vec3 vNormal;
     uniform float uTime;
+    uniform vec2 uResolution;
+    varying vec2 vUv;
+
+    // Polynomial smooth minimum for organic blending (Surface Tension)
+    float smin(float a, float b, float k) {
+        float h = max(k - abs(a - b), 0.0) / k;
+        return min(a, b) - h * h * k * (1.0 / 4.0);
+    }
+
+    float sdSphere(vec3 p, float s) {
+        return length(p) - s;
+    }
+
+    // The Scene SDF
+    float map(vec3 p) {
+        float cycle = fract(uTime * 0.3);
+        float dripY = mix(1.2, -1.8, cycle);
+        
+        // 1. The main source mass (top)
+        float source = sdSphere(p - vec3(0.0, 0.8, 0.0), 0.4);
+        
+        // 2. The falling drop
+        // We stretch the sphere on the Y axis as it falls to simulate viscosity
+        vec3 dropPos = p - vec3(0.0, dripY, 0.0);
+        float stretch = 1.0 + smoothstep(0.0, 0.5, cycle) * 0.5;
+        dropPos.y /= stretch; 
+        float drop = sdSphere(dropPos, 0.25);
+        
+        // 3. Blend them with a high 'k' value for high surface tension
+        return smin(source, drop, 0.6);
+    }
 
     void main() {
-        // Heat calculation based on vertical position and flicker
-        float noise = sin(vPosition.y * 5.0 - uTime * 15.0) * 0.1;
-        float heat = 0.6 + 0.4 * sin(vPosition.y * 1.5 + noise);
+        vec2 uv = (vUv * 2.0 - 1.0) * (uResolution.xy / min(uResolution.x, uResolution.y));
+        vec3 ro = vec3(0.0, 0.0, 2.0); // Ray origin
+        vec3 rd = normalize(vec3(uv, -1.5)); // Ray direction
         
-        // Cooling effect at the very tip of the drip
-        heat *= smoothstep(-7.0, -1.0, vPosition.y);
+        // Raymarching
+        float t = 0.0;
+        for(int i = 0; i < 64; i++) {
+            float d = map(ro + rd * t);
+            if(d < 0.01 || t > 10.0) break;
+            t += d;
+        }
 
-        // Color Ramp: Black -> Deep Red -> Orange -> Yellow-White
-        vec3 cold = vec3(0.1, 0.0, 0.0);
-        vec3 mid = vec3(1.0, 0.2, 0.0);
-        vec3 hot = vec3(1.0, 0.9, 0.6);
-        
-        vec3 color = mix(cold, mid, heat);
-        color = mix(color, hot, pow(heat, 5.0));
-        
-        // Simple rim lighting (Fresnel)
-        float fresnel = pow(1.0 - max(dot(vNormal, vec3(0,0,1)), 0.0), 3.0);
-        color += fresnel * 0.3;
+        if(t < 10.0) {
+            vec3 pos = ro + rd * t;
+            
+            // Calculate Normal for lighting
+            vec2 e = vec2(0.01, 0.0);
+            vec3 nor = normalize(vec4(
+                map(pos + e.xyy) - map(pos - e.xyy),
+                map(pos + e.yxy) - map(pos - e.yxy),
+                map(pos + e.yyx) - map(pos - e.yyx),
+                0.0
+            ).xyz);
 
-        gl_FragColor = vec4(color, 1.0);
+            // Thermal Gradient Logic
+            float heat = smoothstep(-1.0, 1.0, pos.y + sin(uTime * 5.0) * 0.1);
+            vec3 cold = vec3(0.2, 0.0, 0.0);
+            vec3 mid = vec3(1.0, 0.3, 0.0);
+            vec3 hot = vec3(1.0, 0.9, 0.5);
+            
+            vec3 color = mix(cold, mid, heat);
+            color = mix(color, hot, pow(heat, 4.0));
+            
+            // Specular highlight for metallic look
+            float spec = pow(max(dot(reflect(rd, nor), vec3(0, 1, 0)), 0.0), 32.0);
+            color += spec * 0.5;
+
+            gl_FragColor = vec4(color, 1.0);
+        } else {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+        }
     }
 `;
 
 const material = new THREE.ShaderMaterial({
-    uniforms: uniforms,
-    vertexShader: vertexShader,
-    fragmentShader: fragmentShader,
-    side: THREE.DoubleSide
+    uniforms,
+    vertexShader,
+    fragmentShader
 });
 
-// --- Geometry ---
-// High segment count is CRITICAL for smooth deformation
-const geometry = new THREE.CylinderGeometry(0.5, 0.5, 4, 64, 128);
 const mesh = new THREE.Mesh(geometry, material);
 scene.add(mesh);
 
-// --- Animation Loop ---
-const clock = new THREE.Clock();
-
 function animate() {
     requestAnimationFrame(animate);
-    
-    // Update time uniform
-    uniforms.uTime.value = clock.getElapsedTime();
-    
-    // Rotate slightly for 3D effect
-    mesh.rotation.y += 0.005;
-    
+    uniforms.uTime.value = performance.now() / 1000;
     renderer.render(scene, camera);
 }
-
-// Handle Resize
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
 animate();
