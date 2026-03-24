@@ -88,6 +88,109 @@
             z-index: 1000;
             border-left: 4px solid #06b6d4;
             pointer-events: none;
+            display: none;
+        }
+
+        #debugToggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 600;
+            background: rgba(15, 23, 42, 0.65);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 7px 13px;
+            border-radius: 10px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        #instructionPanel {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 500;
+            background: rgba(255, 255, 255, 0.97);
+            border-radius: 20px;
+            padding: 18px 22px;
+            min-width: 280px;
+            max-width: 400px;
+            width: calc(100% - 48px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .instr-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .instr-step-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #06b6d4;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .instr-dots {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .instr-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .instr-dot.done {
+            background: #0d9488;
+        }
+
+        .instr-dot.active {
+            background: #06b6d4;
+            width: 20px;
+            border-radius: 4px;
+        }
+
+        .instr-text {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+
+        .instr-sub {
+            font-size: 0.82rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .fuse-track {
+            height: 6px;
+            background: #f1f5f9;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .fuse-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #ef4444);
+            border-radius: 3px;
+            transition: width 0.1s linear;
         }
 
         .debug-item {
@@ -314,7 +417,7 @@
         <p>Calibrating AR sensors</p>
     </div>
 
-    <!-- Debug Panel -->
+    <!-- Debug Panel (hidden by default — toggle via DEV button) -->
     <div id="debugPanel">
         <div
             style="font-weight: bold; margin-bottom: 8px; border-bottom: 1px solid rgba(34, 211, 238, 0.3); padding-bottom: 4px;">
@@ -322,6 +425,12 @@
         </div>
         <div id="debugContent"></div>
     </div>
+
+    <!-- Student Instruction Panel -->
+    <div id="instructionPanel"></div>
+
+    <!-- Teacher Debug Toggle -->
+    <button id="debugToggle" onclick="toggleDebugPanel()">DEV</button>
 
     <!-- Quiz Overlay -->
     <div id="quizOverlay">
@@ -1205,6 +1314,7 @@
 
             //document.getElementById('tempText').setAttribute('value', Math.round(experimentState.temperature) + '°C');
             updateDebugUI();
+            updateInstructionPanel();
             requestAnimationFrame(animationLoop);
         }
 
@@ -1280,6 +1390,101 @@
                     </div>
                 </div>
                 ` : ''}
+            `;
+        }
+        function toggleDebugPanel() {
+            const panel = document.getElementById('debugPanel');
+            panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateInstructionPanel() {
+            const s = experimentState;
+            const panel = document.getElementById('instructionPanel');
+            if (!panel) return;
+
+            const steps = [
+                {
+                    label: 'Step 1 of 5',
+                    text: 'Point your camera at the Main Station marker.',
+                    sub: 'The main station is your central anchor for this experiment.'
+                },
+                {
+                    label: 'Step 2 of 5',
+                    text: 'Bring the Ceramic Pot close to the Main Station.',
+                    sub: 'Move the Pot marker near the station until it snaps into place.'
+                },
+                {
+                    label: 'Step 3 of 5',
+                    text: 'Add the Thermite Mixture (Fe₂O₃ + Al) to the pot.',
+                    sub: 'Bring the Mixture marker close to the station.'
+                },
+                {
+                    label: 'Step 4 of 5',
+                    text: 'Insert the Magnesium Stick as a fuse.',
+                    sub: 'Bring the Stick marker close to the pot.'
+                },
+                {
+                    label: 'Step 5 of 5',
+                    text: 'Hold the Lighter near the station to ignite!',
+                    sub: s.activeMarkers.has('heat')
+                        ? 'Keep it steady — fuse is burning...'
+                        : 'Bring the Lighter marker close and hold it there for 5 seconds.'
+                }
+            ];
+
+            let stepIndex;
+            let showFuse = false;
+            let fuseProgress = 0;
+            let overrideLabel = null, overrideText = null, overrideSub = null;
+
+            if (s.thermiteCompleted) {
+                overrideLabel = 'Complete!';
+                overrideText = 'Experiment complete. Molten iron has formed.';
+                overrideSub = 'The thermite reaction produced liquid iron at over 2500°C — the same process used to weld railway tracks.';
+                stepIndex = 5;
+            } else if (s.thermiteTriggered) {
+                overrideLabel = 'Reaction Active';
+                overrideText = 'Thermite reaction in progress!';
+                overrideSub = 'Aluminium is reducing the iron oxide, releasing intense heat and light.';
+                stepIndex = 5;
+            } else if (s.isStickAttached) {
+                stepIndex = 4;
+                showFuse = true;
+                fuseProgress = s.thermiteIgnitionTimer / 5.0;
+            } else if (s.isMixtureAttached) {
+                stepIndex = 3;
+            } else if (s.isPotAttached) {
+                stepIndex = 2;
+            } else if (s.activeMarkers.has('main')) {
+                stepIndex = 1;
+            } else {
+                stepIndex = 0;
+            }
+
+            const label = overrideLabel || steps[stepIndex].label;
+            const text = overrideText || steps[stepIndex].text;
+            const sub = overrideSub || steps[stepIndex].sub;
+
+            const dotsHtml = [0, 1, 2, 3, 4].map(i => {
+                if (i < stepIndex) return '<div class="instr-dot done"></div>';
+                if (i === stepIndex && stepIndex < 5) return '<div class="instr-dot active"></div>';
+                return '<div class="instr-dot"></div>';
+            }).join('');
+
+            const fuseHtml = showFuse ? `
+                <div class="fuse-track">
+                    <div class="fuse-fill" style="width:${Math.min(fuseProgress * 100, 100)}%"></div>
+                </div>
+            ` : '';
+
+            panel.innerHTML = `
+                <div class="instr-meta">
+                    <span class="instr-step-label">${label}</span>
+                    <div class="instr-dots">${dotsHtml}</div>
+                </div>
+                <div class="instr-text">${text}</div>
+                <div class="instr-sub">${sub}</div>
+                ${fuseHtml}
             `;
         }
     </script>
