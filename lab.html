@@ -353,6 +353,141 @@
             filter: brightness(1.08);
         }
 
+        /* Quiz Ready Overlay */
+        #quizReadyOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(5px);
+            z-index: 2100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        #quizReadyOverlay.active { display: flex; }
+
+        .quiz-ready-card {
+            background: white;
+            border-radius: 24px;
+            padding: 36px 28px;
+            max-width: 400px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.22);
+            text-align: center;
+            transform: scale(0.92);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+
+        #quizReadyOverlay.active .quiz-ready-card {
+            transform: scale(1);
+            opacity: 1;
+        }
+
+        .quiz-ready-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, #0d9488, #06b6d4);
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: white;
+        }
+
+        .quiz-ready-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        .quiz-ready-sub {
+            font-size: 0.9rem;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+
+        .quiz-ready-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #0d9488, #06b6d4);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: filter 0.2s ease;
+        }
+
+        .quiz-ready-btn:hover { filter: brightness(1.08); }
+
+        /* Quiz progress indicator */
+        .quiz-progress-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 18px;
+        }
+
+        .quiz-prog-dot {
+            flex: 1;
+            height: 4px;
+            border-radius: 2px;
+            background: #e2e8f0;
+            transition: background 0.3s ease;
+        }
+
+        .quiz-prog-dot.done { background: #0d9488; }
+        .quiz-prog-dot.active { background: #06b6d4; }
+
+        /* Score card (replaces quiz card content at the end) */
+        .score-display {
+            text-align: center;
+            padding: 12px 0 8px;
+        }
+
+        .score-number {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #0d9488;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .score-label {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 20px;
+        }
+
+        .score-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .score-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 0.88rem;
+            font-weight: 500;
+        }
+
+        .score-row.correct-row { background: #ecfdf5; color: #065f46; }
+        .score-row.wrong-row   { background: #fef2f2; color: #991b1b; }
+
         .quiz-header {
             display: flex;
             align-items: center;
@@ -523,6 +658,21 @@
         </div>
     </div>
 
+    <!-- Quiz Ready Overlay -->
+    <div id="quizReadyOverlay">
+        <div class="quiz-ready-card">
+            <div class="quiz-ready-icon">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <div class="quiz-ready-title">Experiment Complete!</div>
+            <div class="quiz-ready-sub">Great work! You've observed the thermite reaction from start to finish.<br><br>Ready to test your understanding? Answer <strong>4 quick questions</strong> based on what you just saw.</div>
+            <button class="quiz-ready-btn" onclick="startEndQuiz()">Start Quiz</button>
+        </div>
+    </div>
+
     <!-- Quiz Overlay -->
     <div id="quizOverlay">
         <div class="quiz-card">
@@ -537,14 +687,12 @@
                     style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Concept
                     Check</span>
             </div>
+            <div id="quizProgressBar" class="quiz-progress-bar" style="display:none"></div>
             <div id="quizQuestion" class="quiz-question">Loading question...</div>
-            <div id="quizOptions" class="options-grid">
-                <!-- Options will be injected here -->
-            </div>
+            <div id="quizOptions" class="options-grid"></div>
             <div id="quizFeedback" class="feedback-text"></div>
             <div class="quiz-footer">
-                <button id="quizContinueBtn" class="quiz-continue-btn" onclick="closeQuiz()">Continue
-                    Experiment</button>
+                <button id="quizContinueBtn" class="quiz-continue-btn" onclick="advanceEndQuiz()">Next Question</button>
             </div>
         </div>
     </div>
@@ -678,7 +826,11 @@
             thermiteTriggered: false,
             thermiteCompleted: false,
             quizActive: false,
-            currentQuizLevel: 0
+            currentQuizLevel: 0,
+            endQuizQuestions: [],
+            endQuizIndex: 0,
+            endQuizScore: 0,
+            endQuizResults: []
         };
 
         // --- Thermite Particle System Component (1:1 Port from thermite-staged.html) ---
@@ -1233,30 +1385,17 @@
             }
         };
 
-        function triggerQuiz(phase) {
-            const pool = quizPools[phase];
-            if (!pool || pool.length === 0) return;
-
-            experimentState.quizActive = true;
-
-            // Pick a random question from the pool and stage it
-            const randomIndex = Math.floor(Math.random() * pool.length);
-            const quizy = pool[randomIndex];
-            experimentState.activeQuiz = quizy;
-            experimentState.pendingQuizPhase = phase;
-
-            // Show concept card first if one exists for this phase
+        // Shows only the concept card (no quiz follows during experiment)
+        function showConceptCard(phase) {
             const card = conceptCards[phase];
-            if (card) {
-                document.getElementById('conceptTitle').textContent = card.title;
-                document.getElementById('conceptBody').textContent = card.body;
-                const overlay = document.getElementById('conceptCardOverlay');
-                overlay.style.display = 'flex';
-                // Small delay so the display:flex takes effect before the transition fires
-                setTimeout(() => overlay.classList.add('active'), 10);
-            } else {
-                showQuizPanel();
-            }
+            if (!card) return;
+            experimentState.pendingQuizPhase = phase;
+            experimentState.quizActive = true;
+            document.getElementById('conceptTitle').textContent = card.title;
+            document.getElementById('conceptBody').textContent = card.body;
+            const overlay = document.getElementById('conceptCardOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
         }
 
         function dismissConceptCard() {
@@ -1264,12 +1403,52 @@
             overlay.classList.remove('active');
             setTimeout(() => {
                 overlay.style.display = 'none';
-                showQuizPanel();
+                experimentState.quizActive = false;
+                // After the last (integration) concept card, prompt for end quiz
+                if (experimentState.thermiteCompleted) {
+                    showQuizReady();
+                }
             }, 350);
         }
 
+        function showQuizReady() {
+            const overlay = document.getElementById('quizReadyOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+        }
+
+        function startEndQuiz() {
+            // Close ready overlay
+            const readyOverlay = document.getElementById('quizReadyOverlay');
+            readyOverlay.classList.remove('active');
+            setTimeout(() => { readyOverlay.style.display = 'none'; }, 350);
+
+            // Build one random question per pool in order
+            const order = ['activation', 'setup', 'reaction', 'integration'];
+            experimentState.endQuizQuestions = order.map(phase => {
+                const pool = quizPools[phase];
+                return pool[Math.floor(Math.random() * pool.length)];
+            });
+            experimentState.endQuizIndex = 0;
+            experimentState.endQuizScore = 0;
+            experimentState.endQuizResults = [];
+            experimentState.quizActive = true;
+            showQuizPanel();
+        }
+
         function showQuizPanel() {
-            const quizy = experimentState.activeQuiz;
+            const s = experimentState;
+            const quizy = s.endQuizQuestions[s.endQuizIndex];
+            const total = s.endQuizQuestions.length;
+            const current = s.endQuizIndex;
+
+            // Progress bar
+            const bar = document.getElementById('quizProgressBar');
+            bar.style.display = 'flex';
+            bar.innerHTML = s.endQuizQuestions.map((_, i) => {
+                const cls = i < current ? 'done' : (i === current ? 'active' : '');
+                return `<div class="quiz-prog-dot ${cls}"></div>`;
+            }).join('');
 
             document.getElementById('quizQuestion').textContent = quizy.question;
 
@@ -1284,7 +1463,9 @@
             });
 
             document.getElementById('quizFeedback').className = 'feedback-text';
-            document.getElementById('quizContinueBtn').classList.remove('show');
+            const continueBtn = document.getElementById('quizContinueBtn');
+            continueBtn.textContent = current === total - 1 ? 'See My Score' : 'Next Question';
+            continueBtn.classList.remove('show');
 
             const overlay = document.getElementById('quizOverlay');
             overlay.style.display = 'flex';
@@ -1292,27 +1473,68 @@
         }
 
         function handleAnswer(selectedIndex) {
-            const quizy = experimentState.activeQuiz;
+            const s = experimentState;
+            const quizy = s.endQuizQuestions[s.endQuizIndex];
             const feedbackEl = document.getElementById('quizFeedback');
             const options = document.querySelectorAll('.option-btn');
 
             options.forEach(btn => btn.style.pointerEvents = 'none');
 
-            if (selectedIndex === quizy.correct) {
+            const isCorrect = selectedIndex === quizy.correct;
+            if (isCorrect) {
+                s.endQuizScore++;
                 options[selectedIndex].classList.add('correct');
                 feedbackEl.textContent = quizy.feedback;
                 feedbackEl.className = 'feedback-text show feedback-success';
-                document.getElementById('quizContinueBtn').classList.add('show');
             } else {
                 options[selectedIndex].classList.add('incorrect');
                 options[quizy.correct].classList.add('correct');
                 feedbackEl.textContent = "Not quite. " + quizy.feedback;
                 feedbackEl.className = 'feedback-text show feedback-error';
-                document.getElementById('quizContinueBtn').classList.add('show');
+            }
+            s.endQuizResults.push({ question: quizy.question, correct: isCorrect });
+            document.getElementById('quizContinueBtn').classList.add('show');
+        }
+
+        function advanceEndQuiz() {
+            const s = experimentState;
+            s.endQuizIndex++;
+            if (s.endQuizIndex >= s.endQuizQuestions.length) {
+                showQuizScore();
+            } else {
+                // Slide out then back in with next question
+                const overlay = document.getElementById('quizOverlay');
+                overlay.classList.remove('active');
+                setTimeout(() => {
+                    showQuizPanel();
+                }, 450);
             }
         }
 
-        function closeQuiz() {
+        function showQuizScore() {
+            const s = experimentState;
+            const total = s.endQuizQuestions.length;
+            const score = s.endQuizScore;
+
+            const breakdownHtml = s.endQuizResults.map(r =>
+                `<div class="score-row ${r.correct ? 'correct-row' : 'wrong-row'}">
+                    <span>${r.correct ? '✓' : '✗'}</span>
+                    <span>${r.question}</span>
+                </div>`
+            ).join('');
+
+            const card = document.querySelector('.quiz-card');
+            card.innerHTML = `
+                <div class="score-display">
+                    <div class="score-number">${score}/${total}</div>
+                    <div class="score-label">${score === total ? 'Perfect score!' : score >= total / 2 ? 'Good effort!' : 'Keep exploring!'}</div>
+                    <div class="score-breakdown">${breakdownHtml}</div>
+                    <button class="quiz-continue-btn show" style="visibility:visible" onclick="finishQuiz()">Finish</button>
+                </div>
+            `;
+        }
+
+        function finishQuiz() {
             const overlay = document.getElementById('quizOverlay');
             overlay.classList.remove('active');
             setTimeout(() => {
@@ -1370,7 +1592,7 @@
                             experimentState.currentDistance = 999;
 
                             // Trigger Activation Quiz Pool
-                            setTimeout(() => triggerQuiz('activation'), 2000);
+                            setTimeout(() => showConceptCard('activation'), 2000);
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -1393,7 +1615,7 @@
                             console.log('✅ Stick attached. Use lighter to ignite fuse (5s)');
 
                             // Trigger Setup Quiz Pool
-                            setTimeout(() => triggerQuiz('setup'), 2000);
+                            setTimeout(() => showConceptCard('setup'), 2000);
                         }
                     } else {
                         experimentState.currentDistance = 999;
@@ -1416,7 +1638,7 @@
                             document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
 
                             // Trigger Reaction Quiz Pool (Mid-reaction Check)
-                            setTimeout(() => triggerQuiz('reaction'), 5000);
+                            setTimeout(() => showConceptCard('reaction'), 5000);
                         }
                     } else {
                         // Reset timer if lighter is removed? 
@@ -1437,7 +1659,7 @@
                         document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation_2; loop: once; clampWhenFinished: true");
 
                         // Trigger Integration Quiz Pool (Final)
-                        setTimeout(() => triggerQuiz('integration'), 5000);
+                        setTimeout(() => showConceptCard('integration'), 5000);
                     }
                 }
             }
