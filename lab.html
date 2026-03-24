@@ -651,10 +651,10 @@
     <!-- Concept Card Overlay (shown before each quiz) -->
     <div id="conceptCardOverlay">
         <div class="concept-card">
-            <div class="concept-pill">Before you answer</div>
+            <div class="concept-pill">Key Concept</div>
             <div id="conceptTitle" class="concept-title"></div>
             <div id="conceptBody" class="concept-body"></div>
-            <button class="concept-btn" onclick="dismissConceptCard()">Got it — ask me!</button>
+            <button class="concept-btn" onclick="dismissConceptCard()">Got it!</button>
         </div>
     </div>
 
@@ -1319,13 +1319,13 @@
                     question: "Which element is more reactive—Aluminium or Iron?",
                     options: ["Aluminium", "Iron", "They are equally reactive", "Neither is reactive"],
                     correct: 0,
-                    feedback: "Correct! Aluminium's higher reactivity is the reason it can 'steal' oxygen from Iron Oxide in this reaction."
+                    feedback: "Aluminium's higher reactivity is why it can 'steal' oxygen from Iron Oxide in this reaction."
                 },
                 {
                     question: "In the context of the activity series, why does this reaction work?",
                     options: ["Iron is more noble", "Aluminium is higher than Iron", "Heat makes Iron more reactive", "Oxygen prefers Iron"],
                     correct: 1,
-                    feedback: "Exactly. The more reactive metal (Al) displaces the less reactive metal (Fe) from its oxide."
+                    feedback: "The more reactive metal (Al) displaces the less reactive metal (Fe) from its oxide."
                 }
             ],
             setup: [
@@ -1333,7 +1333,7 @@
                     question: "What role does the Magnesium ribbon play in this setup?",
                     options: ["It is the main fuel", "High-temperature fuse", "It stabilizes the pot", "It acts as a coolant"],
                     correct: 1,
-                    feedback: "Well done! Magnesium provides the intense 'activation energy' needed to jumpstart the Thermite process."
+                    feedback: "Magnesium provides the intense 'activation energy' needed to jumpstart the Thermite process."
                 }
             ],
             reaction: [
@@ -1341,13 +1341,13 @@
                     question: "During the reaction, which substance is being oxidized?",
                     options: ["Iron Oxide", "Aluminium", "Molten Iron", "Magnesium"],
                     correct: 1,
-                    feedback: "Correct! Aluminium gains oxygen, making it the substance that gets oxidized."
+                    feedback: "Aluminium gains oxygen, making it the substance that gets oxidized."
                 },
                 {
                     question: "What visual clues indicate that this is an exothermic reaction?",
                     options: ["Intense light and heat", "Color change to blue", "Formation of ice", "The setup gets colder"],
                     correct: 0,
-                    feedback: "Yes! The dramatic release of heat and blinding light are hallmarks of highly exothermic reactions."
+                    feedback: "The dramatic release of heat and blinding light are hallmarks of highly exothermic reactions."
                 }
             ],
             integration: [
@@ -1355,13 +1355,13 @@
                     question: "Which product of this reaction is used for welding railway tracks?",
                     options: ["Aluminium Oxide", "Molten Iron", "Magnesium Oxide", "Gaseous Oxygen"],
                     correct: 1,
-                    feedback: "Exactly. The reaction creates liquid iron at over 2500°C, perfect for joining heavy rail segments."
+                    feedback: "The reaction creates liquid iron at over 2500°C, perfect for joining heavy rail segments."
                 },
                 {
                     question: "The Thermite process is a classic example of which reaction type?",
                     options: ["Decomposition", "Neutralization", "Redox (Reduction-Oxidation)", "Double Displacement"],
                     correct: 2,
-                    feedback: "Spot on. It involves the simultaneous reduction of iron and oxidation of aluminium."
+                    feedback: "It involves the simultaneous reduction of iron and oxidation of aluminium."
                 }
             ]
         };
@@ -1484,12 +1484,12 @@
             if (isCorrect) {
                 s.endQuizScore++;
                 options[selectedIndex].classList.add('correct');
-                feedbackEl.textContent = quizy.feedback;
+                feedbackEl.textContent = "Correct! " + quizy.feedback;
                 feedbackEl.className = 'feedback-text show feedback-success';
             } else {
                 options[selectedIndex].classList.add('incorrect');
                 options[quizy.correct].classList.add('correct');
-                feedbackEl.textContent = "Not quite. " + quizy.feedback;
+                feedbackEl.textContent = "Not quite — " + quizy.feedback;
                 feedbackEl.className = 'feedback-text show feedback-error';
             }
             s.endQuizResults.push({ question: quizy.question, correct: isCorrect });
