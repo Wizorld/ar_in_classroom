@@ -231,6 +231,197 @@
             color: #1e293b;
         }
 
+        #helpBtn {
+            position: absolute;
+            top: 20px;
+            right: 280px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #0369a1;
+            font-size: 0.9rem;
+        }
+
+        /* Instructions Overlay */
+        #instructionsOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.55);
+            backdrop-filter: blur(6px);
+            z-index: 3000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        #instructionsOverlay.active { display: flex; }
+
+        .inst-card {
+            background: white;
+            border-radius: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .inst-top-bar {
+            background: linear-gradient(135deg, #0d9488, #06b6d4);
+            padding: 20px 24px 18px;
+            color: white;
+        }
+
+        .inst-badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            opacity: 0.8;
+            margin-bottom: 4px;
+        }
+
+        .inst-top-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .inst-slides-wrap {
+            overflow: hidden;
+        }
+
+        .inst-slides {
+            display: flex;
+            transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .inst-slide {
+            min-width: 100%;
+            padding: 24px 24px 16px;
+            box-sizing: border-box;
+        }
+
+        .inst-slide-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .inst-slide-title svg {
+            color: #0d9488;
+            flex-shrink: 0;
+        }
+
+        .inst-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .inst-item {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+
+        .inst-item-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: #f0fdfa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .inst-item-text strong {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1px;
+        }
+
+        .inst-item-text span {
+            font-size: 0.8rem;
+            color: #64748b;
+            line-height: 1.4;
+        }
+
+        .inst-footer {
+            padding: 16px 24px 20px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .inst-dots-row {
+            display: flex;
+            gap: 6px;
+        }
+
+        .inst-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .inst-dot.active {
+            background: #0d9488;
+            width: 20px;
+            border-radius: 4px;
+        }
+
+        .inst-btn-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .inst-skip-btn {
+            background: none;
+            border: none;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 8px 4px;
+        }
+
+        .inst-next-btn {
+            background: linear-gradient(90deg, #0d9488, #06b6d4);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .inst-next-btn:hover { filter: brightness(1.08); }
+
         #restartBtn {
             position: absolute;
             top: 20px;
@@ -733,6 +924,157 @@
 </head>
 
 <body>
+    <!-- Instructions Overlay -->
+    <div id="instructionsOverlay">
+        <div class="inst-card">
+            <div class="inst-top-bar">
+                <div class="inst-badge">AR Chemistry Lab — User Guide</div>
+                <div class="inst-top-title">How to use this lab</div>
+            </div>
+            <div class="inst-slides-wrap">
+                <div class="inst-slides" id="instSlides">
+
+                    <!-- Slide 1: What You Need -->
+                    <div class="inst-slide">
+                        <div class="inst-slide-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="4" rx="1"/><path d="M5 4h14a1 1 0 0 1 1 1v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h4"/></svg>
+                            What You Need
+                        </div>
+                        <div class="inst-items">
+                            <div class="inst-item">
+                                <div class="inst-item-icon">🃏</div>
+                                <div class="inst-item-text">
+                                    <strong>6 Printed Marker Cards</strong>
+                                    <span>Flat barcode cards — keep them unfolded on a surface</span>
+                                </div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon">📱</div>
+                                <div class="inst-item-text">
+                                    <strong>Your Device</strong>
+                                    <span>Hold it steady — shaky hands cause markers to lose tracking</span>
+                                </div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon">💡</div>
+                                <div class="inst-item-text">
+                                    <strong>Good Lighting</strong>
+                                    <span>Avoid shadows falling directly on the markers</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 2: How Markers Work -->
+                    <div class="inst-slide">
+                        <div class="inst-slide-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                            How Markers Work
+                        </div>
+                        <div class="inst-items">
+                            <div class="inst-item">
+                                <div class="inst-item-icon">👁️</div>
+                                <div class="inst-item-text">
+                                    <strong>Point Camera at a Marker</strong>
+                                    <span>A 3D object appears on top of it — that's your virtual lab equipment</span>
+                                </div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon">🔗</div>
+                                <div class="inst-item-text">
+                                    <strong>Bring Markers Close Together</strong>
+                                    <span>Placing two markers near each other triggers interactions (e.g. pot snaps to station)</span>
+                                </div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon">📋</div>
+                                <div class="inst-item-text">
+                                    <strong>Follow the Instruction Panel</strong>
+                                    <span>The card at the bottom always tells you the next step</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 3: Experiment Steps -->
+                    <div class="inst-slide">
+                        <div class="inst-slide-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                            Experiment Flow
+                        </div>
+                        <div class="inst-items">
+                            <div class="inst-item">
+                                <div class="inst-item-icon" style="background:#eff6ff; font-size:0.8rem; font-weight:700; color:#0d9488;">1</div>
+                                <div class="inst-item-text"><strong>Show the Main Station marker</strong><span>This anchors the experiment</span></div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon" style="background:#eff6ff; font-size:0.8rem; font-weight:700; color:#0d9488;">2</div>
+                                <div class="inst-item-text"><strong>Add the Ceramic Pot</strong><span>Bring its marker close to the station</span></div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon" style="background:#eff6ff; font-size:0.8rem; font-weight:700; color:#0d9488;">3</div>
+                                <div class="inst-item-text"><strong>Add Thermite Mixture, then Magnesium Ribbon</strong><span>One at a time</span></div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon" style="background:#eff6ff; font-size:0.8rem; font-weight:700; color:#0d9488;">4–5</div>
+                                <div class="inst-item-text"><strong>Hold the Lighter for 5 seconds</strong><span>Watch the reaction! A quiz follows.</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slide 4: Tips -->
+                    <div class="inst-slide">
+                        <div class="inst-slide-title">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                            Tips for Best Results
+                        </div>
+                        <div class="inst-items">
+                            <div class="inst-item">
+                                <div class="inst-item-icon">📐</div>
+                                <div class="inst-item-text"><strong>Keep markers flat on a surface</strong><span>Bent or tilted cards lose tracking quickly</span></div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon">📏</div>
+                                <div class="inst-item-text"><strong>Hold device 30–50 cm above markers</strong><span>Too close or too far reduces detection accuracy</span></div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon">🔄</div>
+                                <div class="inst-item-text"><strong>Marker lost? Re-scan it</strong><span>Move the device away then slowly back toward the marker</span></div>
+                            </div>
+                            <div class="inst-item">
+                                <div class="inst-item-icon">💬</div>
+                                <div class="inst-item-text"><strong>Stuck? Tap "Need a hint?"</strong><span>It appears automatically after 30 seconds of no progress</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="inst-footer">
+                <div class="inst-dots-row" id="instDots">
+                    <div class="inst-dot active"></div>
+                    <div class="inst-dot"></div>
+                    <div class="inst-dot"></div>
+                    <div class="inst-dot"></div>
+                </div>
+                <div class="inst-btn-row">
+                    <button class="inst-skip-btn" onclick="closeInstructions()">Skip</button>
+                    <button class="inst-next-btn" id="instNextBtn" onclick="nextInstSlide()">Next →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button id="helpBtn" onclick="showInstructions()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        How to Use
+    </button>
+
     <button id="restartBtn" onclick="restartExperiment()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -2139,6 +2481,47 @@
                 labelEl.style.left = x + 'px';
                 labelEl.style.top = (y + 16) + 'px'; // below marker centre, clear of 3D model
             });
+        }
+
+        // Instructions overlay
+        let _instSlide = 0;
+        const INST_TOTAL = 4;
+
+        function showInstructions() {
+            _instSlide = 0;
+            _renderInstSlide();
+            const overlay = document.getElementById('instructionsOverlay');
+            overlay.style.display = 'flex';
+        }
+
+        function closeInstructions() {
+            document.getElementById('instructionsOverlay').style.display = 'none';
+        }
+
+        function nextInstSlide() {
+            if (_instSlide < INST_TOTAL - 1) {
+                _instSlide++;
+                _renderInstSlide();
+            } else {
+                closeInstructions();
+            }
+        }
+
+        function _renderInstSlide() {
+            document.getElementById('instSlides').style.transform =
+                `translateX(-${_instSlide * 100}%)`;
+            const dots = document.querySelectorAll('.inst-dot');
+            dots.forEach((d, i) => {
+                d.classList.toggle('active', i === _instSlide);
+            });
+            document.getElementById('instNextBtn').textContent =
+                _instSlide === INST_TOTAL - 1 ? "Let's Start! →" : 'Next →';
+        }
+
+        // Show on first visit; re-openable via Help button
+        if (!localStorage.getItem('arlab_inst_seen')) {
+            showInstructions();
+            localStorage.setItem('arlab_inst_seen', '1');
         }
 
         function toggleDebugPanel() {
