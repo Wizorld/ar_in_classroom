@@ -801,13 +801,15 @@
 
         <!-- MAIN MARKER (Hiro Pattern - represents the chemistry apparatus) -->
         <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
-            <a-entity position="0 2.8 0" look-at="[camera]">
-                <a-plane width="2.0" height="0.65" color="#0f172a"
-                    material="transparent: true; opacity: 0.82; side: double" position="0 0 -0.01"></a-plane>
-                <a-text value="Reaction Station" color="#ffffff" align="center"
-                    width="3.5" wrap-count="20" position="0 0.13 0"></a-text>
-                <a-text value="Central Apparatus" color="#22d3ee" align="center"
-                    width="3.0" wrap-count="25" position="0 -0.13 0"></a-text>
+            <a-entity position="0 1.4 0" billboard>
+                <a-plane width="1.8" height="0.52" color="#ffffff"
+                    material="transparent: true; opacity: 0.96; side: double" position="0 0 -0.01"></a-plane>
+                <a-plane width="1.8" height="0.05" color="#0d9488"
+                    material="side: double" position="0 0.235 -0.005"></a-plane>
+                <a-text value="Reaction Station" color="#0d9488" align="center"
+                    width="3.0" wrap-count="18" font="roboto" position="0 0.07 0"></a-text>
+                <a-text value="Central Apparatus" color="#475569" align="center"
+                    width="2.8" wrap-count="24" font="roboto" position="0 -0.11 0"></a-text>
             </a-entity>
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
                 <a-entity id="snappedSandBox" visible="true" scale="0.5  0.5 0.5" position="0 0.5 0">
@@ -842,13 +844,15 @@
             <a-ring id="heatRing" radius-inner="0.75" radius-outer="0.95"
                 material="color: #06b6d4; emissive: #06b6d4; emissiveIntensity: 1; transparent: true; opacity: 0.85"
                 position="0 0.02 0" rotation="-90 0 0" visible="false"></a-ring>
-            <a-entity position="0 2.2 0" look-at="[camera]">
-                <a-plane width="2.0" height="0.65" color="#0f172a"
-                    material="transparent: true; opacity: 0.82; side: double" position="0 0 -0.01"></a-plane>
-                <a-text value="Gas Lighter" color="#ffffff" align="center"
-                    width="3.5" wrap-count="20" position="0 0.13 0"></a-text>
-                <a-text value="Ignition Source" color="#22d3ee" align="center"
-                    width="3.0" wrap-count="25" position="0 -0.13 0"></a-text>
+            <a-entity position="0 1.4 0" billboard>
+                <a-plane width="1.8" height="0.52" color="#ffffff"
+                    material="transparent: true; opacity: 0.96; side: double" position="0 0 -0.01"></a-plane>
+                <a-plane width="1.8" height="0.05" color="#0d9488"
+                    material="side: double" position="0 0.235 -0.005"></a-plane>
+                <a-text value="Gas Lighter" color="#0d9488" align="center"
+                    width="3.0" wrap-count="18" font="roboto" position="0 0.07 0"></a-text>
+                <a-text value="Ignition Source" color="#475569" align="center"
+                    width="2.8" wrap-count="24" font="roboto" position="0 -0.11 0"></a-text>
             </a-entity>
             <a-entity position="0 0 0" scale="1 1 1">
                 <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0"
@@ -863,13 +867,15 @@
             <a-ring id="potRing" radius-inner="0.75" radius-outer="0.95"
                 material="color: #06b6d4; emissive: #06b6d4; emissiveIntensity: 1; transparent: true; opacity: 0.85"
                 position="0 0.02 0" rotation="-90 0 0" visible="false"></a-ring>
-            <a-entity position="0 2.8 0" look-at="[camera]">
-                <a-plane width="2.0" height="0.65" color="#0f172a"
-                    material="transparent: true; opacity: 0.82; side: double" position="0 0 -0.01"></a-plane>
-                <a-text value="Ceramic Pot" color="#ffffff" align="center"
-                    width="3.5" wrap-count="20" position="0 0.13 0"></a-text>
-                <a-text value="Reaction Container" color="#22d3ee" align="center"
-                    width="3.0" wrap-count="25" position="0 -0.13 0"></a-text>
+            <a-entity position="0 1.6 0" billboard>
+                <a-plane width="1.8" height="0.52" color="#ffffff"
+                    material="transparent: true; opacity: 0.96; side: double" position="0 0 -0.01"></a-plane>
+                <a-plane width="1.8" height="0.05" color="#0d9488"
+                    material="side: double" position="0 0.235 -0.005"></a-plane>
+                <a-text value="Ceramic Pot" color="#0d9488" align="center"
+                    width="3.0" wrap-count="18" font="roboto" position="0 0.07 0"></a-text>
+                <a-text value="Reaction Container" color="#475569" align="center"
+                    width="2.8" wrap-count="24" font="roboto" position="0 -0.11 0"></a-text>
             </a-entity>
             <a-entity id="potOriginalModel" position="0 0 0" scale="2 2 2">
                 <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb" position="0 0 0"
@@ -881,13 +887,15 @@
         <a-marker id="sandBoxMarker" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8">
             <a-cylinder position="0 -0.4 0" radius="0.8" height="0.02" color="#e2e8f0"
                 material="roughness: 0.8"></a-cylinder>
-            <a-entity position="0 3.0 0" look-at="[camera]">
-                <a-plane width="2.0" height="0.65" color="#0f172a"
-                    material="transparent: true; opacity: 0.82; side: double" position="0 0 -0.01"></a-plane>
-                <a-text value="Sand Box" color="#ffffff" align="center"
-                    width="3.5" wrap-count="20" position="0 0.13 0"></a-text>
-                <a-text value="Safety Heat Absorber" color="#22d3ee" align="center"
-                    width="3.0" wrap-count="25" position="0 -0.13 0"></a-text>
+            <a-entity position="0 1.6 0" billboard>
+                <a-plane width="1.8" height="0.52" color="#ffffff"
+                    material="transparent: true; opacity: 0.96; side: double" position="0 0 -0.01"></a-plane>
+                <a-plane width="1.8" height="0.05" color="#0d9488"
+                    material="side: double" position="0 0.235 -0.005"></a-plane>
+                <a-text value="Sand Box" color="#0d9488" align="center"
+                    width="3.0" wrap-count="18" font="roboto" position="0 0.07 0"></a-text>
+                <a-text value="Safety Heat Absorber" color="#475569" align="center"
+                    width="2.8" wrap-count="24" font="roboto" position="0 -0.11 0"></a-text>
             </a-entity>
             <a-entity position="0 0 0" scale="5 5 5">
                 <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"
@@ -902,13 +910,15 @@
             <a-ring id="mixtureRing" radius-inner="0.75" radius-outer="0.95"
                 material="color: #06b6d4; emissive: #06b6d4; emissiveIntensity: 1; transparent: true; opacity: 0.85"
                 position="0 0.02 0" rotation="-90 0 0" visible="false"></a-ring>
-            <a-entity position="0 2.2 0" look-at="[camera]">
-                <a-plane width="2.2" height="0.65" color="#0f172a"
-                    material="transparent: true; opacity: 0.82; side: double" position="0 0 -0.01"></a-plane>
-                <a-text value="Thermite Mixture" color="#ffffff" align="center"
-                    width="3.5" wrap-count="20" position="0 0.13 0"></a-text>
-                <a-text value="Fe2O3 + Al Powder" color="#22d3ee" align="center"
-                    width="3.0" wrap-count="25" position="0 -0.13 0"></a-text>
+            <a-entity position="0 1.4 0" billboard>
+                <a-plane width="1.9" height="0.52" color="#ffffff"
+                    material="transparent: true; opacity: 0.96; side: double" position="0 0 -0.01"></a-plane>
+                <a-plane width="1.9" height="0.05" color="#0d9488"
+                    material="side: double" position="0 0.235 -0.005"></a-plane>
+                <a-text value="Thermite Mixture" color="#0d9488" align="center"
+                    width="3.0" wrap-count="18" font="roboto" position="0 0.07 0"></a-text>
+                <a-text value="Fe2O3 + Al Powder" color="#475569" align="center"
+                    width="2.8" wrap-count="24" font="roboto" position="0 -0.11 0"></a-text>
             </a-entity>
             <a-entity id="mixtureOriginalModel" position="0 0 0" scale="0.2 0.2 0.2">
                 <a-entity gltf-model="Assets/Exothermic reaction/Iron Oxide and Aluminium powder.glb"
@@ -923,13 +933,15 @@
             <a-ring id="stickRing" radius-inner="0.75" radius-outer="0.95"
                 material="color: #06b6d4; emissive: #06b6d4; emissiveIntensity: 1; transparent: true; opacity: 0.85"
                 position="0 0.02 0" rotation="-90 0 0" visible="false"></a-ring>
-            <a-entity position="0 2.8 0" look-at="[camera]">
-                <a-plane width="2.2" height="0.65" color="#0f172a"
-                    material="transparent: true; opacity: 0.82; side: double" position="0 0 -0.01"></a-plane>
-                <a-text value="Magnesium Ribbon" color="#ffffff" align="center"
-                    width="3.5" wrap-count="20" position="0 0.13 0"></a-text>
-                <a-text value="High-Temp Ignition Fuse" color="#22d3ee" align="center"
-                    width="3.0" wrap-count="25" position="0 -0.13 0"></a-text>
+            <a-entity position="0 1.6 0" billboard>
+                <a-plane width="1.9" height="0.52" color="#ffffff"
+                    material="transparent: true; opacity: 0.96; side: double" position="0 0 -0.01"></a-plane>
+                <a-plane width="1.9" height="0.05" color="#0d9488"
+                    material="side: double" position="0 0.235 -0.005"></a-plane>
+                <a-text value="Magnesium Ribbon" color="#0d9488" align="center"
+                    width="3.0" wrap-count="18" font="roboto" position="0 0.07 0"></a-text>
+                <a-text value="High-Temp Ignition Fuse" color="#475569" align="center"
+                    width="2.8" wrap-count="24" font="roboto" position="0 -0.11 0"></a-text>
             </a-entity>
             <a-entity id="stickOriginalModel" position="0 0 0" scale="1 1 1">
                 <a-entity gltf-model="Assets/Exothermic reaction/Magnesium Stick.glb" position="0 0 0"></a-entity>
@@ -950,6 +962,17 @@
     </a-scene>
 
     <script>
+        // Full 3D billboard — always faces camera exactly (lookAt on all axes)
+        AFRAME.registerComponent('billboard', {
+            init: function () { this._camPos = new THREE.Vector3(); },
+            tick: function () {
+                const cam = this.el.sceneEl.camera;
+                if (!cam) return;
+                cam.getWorldPosition(this._camPos);
+                this.el.object3D.lookAt(this._camPos);
+            }
+        });
+
         const experimentState = {
             temperature: 25,
             isHeating: false,
