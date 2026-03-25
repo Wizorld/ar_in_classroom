@@ -657,6 +657,133 @@
         .quiz-prog-dot.done { background: #0d9488; }
         .quiz-prog-dot.active { background: #06b6d4; }
 
+        /* Bloom's level badge */
+        .bloom-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 14px;
+        }
+        .bloom-understand { background: #dbeafe; color: #1d4ed8; }
+        .bloom-apply      { background: #d1fae5; color: #065f46; }
+        .bloom-analyze    { background: #fef3c7; color: #92400e; }
+        .bloom-evaluate   { background: #ede9fe; color: #5b21b6; }
+
+        /* Formative Prediction Overlay */
+        #formativeOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(4px);
+            z-index: 2100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        #formativeOverlay.active { display: flex; }
+
+        .formative-card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px 28px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+            transform: translateY(24px);
+            opacity: 0;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+        #formativeOverlay.active .formative-card {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .formative-pill {
+            display: inline-block;
+            background: #fef3c7;
+            color: #92400e;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            padding: 4px 12px;
+            border-radius: 20px;
+            margin-bottom: 14px;
+        }
+        .formative-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .formative-body {
+            font-size: 0.9rem;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .formative-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 22px;
+        }
+        .formative-option {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+            font-size: 0.9rem;
+            color: #334e68;
+        }
+        .formative-option:hover { background: #e0f2fe; }
+        .formative-option input[type="checkbox"] {
+            width: 18px; height: 18px;
+            accent-color: #0d9488;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        .formative-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: filter 0.2s ease;
+        }
+        .formative-btn:hover { filter: brightness(1.08); }
+        .formative-btn:disabled { opacity: 0.7; cursor: default; }
+
+        /* Score breakdown by Bloom's level */
+        .bloom-breakdown {
+            margin: 16px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .bloom-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
         /* Score card (replaces quiz card content at the end) */
         .score-display {
             text-align: center;
@@ -1166,6 +1293,17 @@
         </div>
     </div>
 
+    <!-- Formative Prediction Overlay -->
+    <div id="formativeOverlay">
+        <div class="formative-card">
+            <div class="formative-pill">Predict &amp; Observe</div>
+            <div class="formative-title">Before You Ignite</div>
+            <div id="formativeBody" class="formative-body">Based on what you've just learned, predict what you think will happen when the thermite mixture is ignited. Select all observations you expect:</div>
+            <div id="formativeOptions" class="formative-options"></div>
+            <button id="formativeBtn" class="formative-btn" onclick="submitFormative()">Submit Prediction</button>
+        </div>
+    </div>
+
     <!-- Quiz Ready Overlay -->
     <div id="quizReadyOverlay">
         <div class="quiz-ready-card">
@@ -1175,9 +1313,9 @@
                     <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
             </div>
-            <div class="quiz-ready-title">Experiment Complete!</div>
-            <div class="quiz-ready-sub">Great work! You've observed the thermite reaction from start to finish.<br><br>Ready to test your understanding? Answer <strong>4 quick questions</strong> based on what you just saw.</div>
-            <button class="quiz-ready-btn" onclick="startEndQuiz()">Start Quiz</button>
+            <div class="quiz-ready-title">Summative Assessment</div>
+            <div class="quiz-ready-sub">Well done! You've completed the thermite reaction experiment.<br><br>Now it's time to test your understanding. Answer <strong>7 questions</strong> across different thinking levels — from understanding concepts to evaluating real-world applications.</div>
+            <button class="quiz-ready-btn" onclick="startEndQuiz()">Begin Assessment</button>
         </div>
     </div>
 
@@ -1192,9 +1330,9 @@
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
                 <span
-                    style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Concept
-                    Check</span>
+                    style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Summative Assessment</span>
             </div>
+            <div id="quizBloomBadge"></div>
             <div id="quizProgressBar" class="quiz-progress-bar" style="display:none"></div>
             <div id="quizQuestion" class="quiz-question">Loading question...</div>
             <div id="quizOptions" class="options-grid"></div>
@@ -1827,58 +1965,104 @@
             document.getElementById('magnesiumStickMarker').addEventListener('markerLost', () => experimentState.activeMarkers.delete('stick'));
         }
 
-        const quizPools = {
-            activation: [
-                {
-                    question: "Which element is more reactive—Aluminium or Iron?",
-                    options: ["Aluminium", "Iron", "They are equally reactive", "Neither is reactive"],
-                    correct: 0,
-                    feedback: "Aluminium's higher reactivity is why it can 'steal' oxygen from Iron Oxide in this reaction."
-                },
-                {
-                    question: "In the context of the activity series, why does this reaction work?",
-                    options: ["Iron is more noble", "Aluminium is higher than Iron", "Heat makes Iron more reactive", "Oxygen prefers Iron"],
-                    correct: 1,
-                    feedback: "The more reactive metal (Al) displaces the less reactive metal (Fe) from its oxide."
-                }
-            ],
-            setup: [
-                {
-                    question: "What role does the Magnesium ribbon play in this setup?",
-                    options: ["It is the main fuel", "High-temperature fuse", "It stabilizes the pot", "It acts as a coolant"],
-                    correct: 1,
-                    feedback: "Magnesium provides the intense 'activation energy' needed to jumpstart the Thermite process."
-                }
-            ],
-            reaction: [
-                {
-                    question: "During the reaction, which substance is being oxidized?",
-                    options: ["Iron Oxide", "Aluminium", "Molten Iron", "Magnesium"],
-                    correct: 1,
-                    feedback: "Aluminium gains oxygen, making it the substance that gets oxidized."
-                },
-                {
-                    question: "What visual clues indicate that this is an exothermic reaction?",
-                    options: ["Intense light and heat", "Color change to blue", "Formation of ice", "The setup gets colder"],
-                    correct: 0,
-                    feedback: "The dramatic release of heat and blinding light are hallmarks of highly exothermic reactions."
-                }
-            ],
-            integration: [
-                {
-                    question: "Which product of this reaction is used for welding railway tracks?",
-                    options: ["Aluminium Oxide", "Molten Iron", "Magnesium Oxide", "Gaseous Oxygen"],
-                    correct: 1,
-                    feedback: "The reaction creates liquid iron at over 2500°C, perfect for joining heavy rail segments."
-                },
-                {
-                    question: "The Thermite process is a classic example of which reaction type?",
-                    options: ["Decomposition", "Neutralization", "Redox (Reduction-Oxidation)", "Double Displacement"],
-                    correct: 2,
-                    feedback: "It involves the simultaneous reduction of iron and oxidation of aluminium."
-                }
-            ]
-        };
+        // Formative prediction items — non-graded, recorded only
+        const formativeItems = [
+            "Intense bright white or yellow light",
+            "Molten metal dripping down",
+            "Sparks flying outward",
+            "Large amounts of heat being released",
+            "The setup gets cold",
+            "Blue or green flames",
+            "White powder residue forming"
+        ];
+
+        // Summative questions tagged by Bloom's level (7 total)
+        const summativeQuestions = [
+            {
+                bloom: 'Understand',
+                question: "What does it mean for a chemical reaction to be 'exothermic'?",
+                options: [
+                    "It absorbs heat from the surroundings",
+                    "It releases energy into the surroundings as heat and light",
+                    "It requires electricity to proceed",
+                    "It only occurs at very low temperatures"
+                ],
+                correct: 1,
+                feedback: "Exothermic reactions release energy — the surroundings get hotter, explaining the intense heat and light you observed."
+            },
+            {
+                bloom: 'Understand',
+                question: "Aluminium is placed above iron in the activity series. What does this mean?",
+                options: [
+                    "Aluminium is heavier than iron",
+                    "Iron can displace aluminium from its compounds",
+                    "Aluminium reacts more readily and can displace iron from its oxide",
+                    "They have the same chemical reactivity"
+                ],
+                correct: 2,
+                feedback: "A higher position means greater reactivity — aluminium's stronger affinity for oxygen lets it 'steal' oxygen from iron oxide."
+            },
+            {
+                bloom: 'Apply',
+                question: "A technician needs to weld two broken rail segments in a remote location with no electricity. Which technique is most appropriate?",
+                options: [
+                    "Arc welding using a portable generator",
+                    "Thermite welding using aluminium powder and iron oxide",
+                    "Soldering with a handheld torch",
+                    "Adhesive bonding with industrial epoxy"
+                ],
+                correct: 1,
+                feedback: "Thermite welding requires no external power source — the self-sustaining reaction generates its own intense heat, making it ideal for field repairs."
+            },
+            {
+                bloom: 'Analyze',
+                question: "In the equation Fe₂O₃ + 2Al → Al₂O₃ + 2Fe, which species acts as the oxidising agent?",
+                options: [
+                    "Aluminium (Al), because it gains oxygen",
+                    "Iron Oxide (Fe₂O₃), because it donates oxygen to aluminium",
+                    "Molten Iron (Fe), because it is the product",
+                    "Aluminium Oxide (Al₂O₃), because it contains oxygen"
+                ],
+                correct: 1,
+                feedback: "The oxidising agent causes oxidation in another by providing oxygen. Fe₂O₃ donates its oxygen to aluminium — that makes it the oxidising agent."
+            },
+            {
+                bloom: 'Analyze',
+                question: "Why does the thermite reaction release far more heat than a typical wood fire?",
+                options: [
+                    "It simply uses more material",
+                    "The Al–O bond in Al₂O₃ is much stronger than the Fe–O bond broken in Fe₂O₃, releasing a large net energy",
+                    "All metal reactions produce more heat than organic fires",
+                    "It burns faster, so heat accumulates without dissipating"
+                ],
+                correct: 1,
+                feedback: "Energy released equals the difference in bond energies. The Al–O bond is significantly stronger than Fe–O, so forming Al₂O₃ releases a large net amount of energy."
+            },
+            {
+                bloom: 'Evaluate',
+                question: "A student proposes using copper oxide (CuO) instead of iron oxide to produce molten metal for rail welding. Evaluate this idea.",
+                options: [
+                    "Good idea — the reaction works and copper is cheaper",
+                    "Poor idea — aluminium cannot displace copper from its oxide",
+                    "Poor idea — although the reaction would work, molten copper bonds poorly with steel rails",
+                    "Good idea — a copper joint would be stronger than iron"
+                ],
+                correct: 2,
+                feedback: "Al is above Cu in the activity series, so the reaction would proceed. However, copper does not alloy well with steel, making joints brittle — iron is specifically chosen because it bonds metallurgically with steel."
+            },
+            {
+                bloom: 'Evaluate',
+                question: "The thermite reaction cannot be stopped once ignited. Is this a safety weakness, a practical strength, or both?",
+                options: [
+                    "Safety weakness only — it is uncontrollable and therefore dangerous",
+                    "Practical strength only — it guarantees the weld always completes",
+                    "Both — it ensures reliable weld completion but demands strict safety precautions",
+                    "Neither — modern thermite mixtures include a stop mechanism"
+                ],
+                correct: 2,
+                feedback: "The self-sustaining nature guarantees weld quality even in poor field conditions, but any setup error cannot be corrected mid-reaction — hence the strict safety protocols required."
+            }
+        ];
 
         const conceptCards = {
             activation: {
@@ -1918,10 +2102,59 @@
             setTimeout(() => {
                 overlay.style.display = 'none';
                 experimentState.quizActive = false;
-                // After the last (integration) concept card, prompt for end quiz
-                if (experimentState.thermiteCompleted) {
+                // After setup concept card → show formative prediction prompt
+                if (experimentState.pendingQuizPhase === 'setup') {
+                    showFormative();
+                }
+                // After the last (integration) concept card → summative assessment
+                else if (experimentState.thermiteCompleted) {
                     showQuizReady();
                 }
+            }, 350);
+        }
+
+        // ── Formative Assessment ────────────────────────────────────────────
+        function showFormative() {
+            const optionsEl = document.getElementById('formativeOptions');
+            optionsEl.innerHTML = formativeItems.map((text, i) => `
+                <label class="formative-option">
+                    <input type="checkbox" value="${i}">
+                    <span>${text}</span>
+                </label>
+            `).join('');
+            document.getElementById('formativeBody').textContent =
+                "Based on what you've just learned, predict what you think will happen when the thermite mixture is ignited. Select all observations you expect:";
+            document.getElementById('formativeBtn').textContent = 'Submit Prediction';
+            document.getElementById('formativeBtn').disabled = false;
+            const overlay = document.getElementById('formativeOverlay');
+            overlay.style.display = 'flex';
+            setTimeout(() => overlay.classList.add('active'), 10);
+            experimentState.quizActive = true;
+        }
+
+        function submitFormative() {
+            const checkboxes = document.querySelectorAll('#formativeOptions input[type="checkbox"]');
+            const selected = [];
+            checkboxes.forEach((cb, i) => { if (cb.checked) selected.push(i); });
+            experimentState.formativePredictions = selected;
+
+            // Disable all checkboxes and button
+            checkboxes.forEach(cb => cb.disabled = true);
+            const btn = document.getElementById('formativeBtn');
+            btn.textContent = 'Keep watching!';
+            btn.disabled = true;
+            document.getElementById('formativeBody').textContent =
+                'Great! Keep these predictions in mind as you watch the reaction. See how many you got right!';
+
+            setTimeout(dismissFormative, 2000);
+        }
+
+        function dismissFormative() {
+            const overlay = document.getElementById('formativeOverlay');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                experimentState.quizActive = false;
             }, 350);
         }
 
@@ -1937,12 +2170,7 @@
             readyOverlay.classList.remove('active');
             setTimeout(() => { readyOverlay.style.display = 'none'; }, 350);
 
-            // Build one random question per pool in order
-            const order = ['activation', 'setup', 'reaction', 'integration'];
-            experimentState.endQuizQuestions = order.map(phase => {
-                const pool = quizPools[phase];
-                return pool[Math.floor(Math.random() * pool.length)];
-            });
+            experimentState.endQuizQuestions = summativeQuestions;
             experimentState.endQuizIndex = 0;
             experimentState.endQuizScore = 0;
             experimentState.endQuizResults = [];
@@ -1963,6 +2191,13 @@
                 const cls = i < current ? 'done' : (i === current ? 'active' : '');
                 return `<div class="quiz-prog-dot ${cls}"></div>`;
             }).join('');
+
+            // Bloom's badge
+            const bloomBadge = document.getElementById('quizBloomBadge');
+            if (bloomBadge && quizy.bloom) {
+                const cls = 'bloom-' + quizy.bloom.toLowerCase();
+                bloomBadge.innerHTML = `<span class="bloom-badge ${cls}">${quizy.bloom}</span>`;
+            }
 
             document.getElementById('quizQuestion').textContent = quizy.question;
 
@@ -2006,7 +2241,7 @@
                 feedbackEl.textContent = "Not quite — " + quizy.feedback;
                 feedbackEl.className = 'feedback-text show feedback-error';
             }
-            s.endQuizResults.push({ question: quizy.question, correct: isCorrect });
+            s.endQuizResults.push({ question: quizy.question, bloom: quizy.bloom, correct: isCorrect });
             document.getElementById('quizContinueBtn').classList.add('show');
         }
 
@@ -2030,19 +2265,54 @@
             const total = s.endQuizQuestions.length;
             const score = s.endQuizScore;
 
-            const breakdownHtml = s.endQuizResults.map(r =>
+            // Per-question breakdown
+            const perQuestionHtml = s.endQuizResults.map(r =>
                 `<div class="score-row ${r.correct ? 'correct-row' : 'wrong-row'}">
                     <span>${r.correct ? '✓' : '✗'}</span>
                     <span>${r.question}</span>
                 </div>`
             ).join('');
 
+            // Per-Bloom-level breakdown
+            const bloomLevels = ['Understand', 'Apply', 'Analyze', 'Evaluate'];
+            const bloomColors = { Understand: 'bloom-understand', Apply: 'bloom-apply', Analyze: 'bloom-analyze', Evaluate: 'bloom-evaluate' };
+            const bloomTally = {};
+            bloomLevels.forEach(l => { bloomTally[l] = { score: 0, total: 0 }; });
+            s.endQuizResults.forEach(r => {
+                if (r.bloom && bloomTally[r.bloom]) {
+                    bloomTally[r.bloom].total++;
+                    if (r.correct) bloomTally[r.bloom].score++;
+                }
+            });
+            const bloomHtml = bloomLevels
+                .filter(l => bloomTally[l].total > 0)
+                .map(l => {
+                    const t = bloomTally[l];
+                    return `<div class="bloom-row ${bloomColors[l]}">
+                        <span>${l}</span><span>${t.score}/${t.total}</span>
+                    </div>`;
+                }).join('');
+
+            // Save to localStorage
+            const saveData = {
+                timestamp: new Date().toISOString(),
+                score, total,
+                bloomBreakdown: bloomTally,
+                questions: s.endQuizResults
+            };
+            try { localStorage.setItem('ar_lab_summative', JSON.stringify(saveData)); } catch(e) {}
+
+            const scoreLabel = score === total ? 'Perfect score!' : score >= Math.ceil(total * 0.7) ? 'Well done!' : score >= Math.ceil(total / 2) ? 'Good effort!' : 'Keep exploring!';
+
             const card = document.querySelector('.quiz-card');
             card.innerHTML = `
                 <div class="score-display">
                     <div class="score-number">${score}/${total}</div>
-                    <div class="score-label">${score === total ? 'Perfect score!' : score >= total / 2 ? 'Good effort!' : 'Keep exploring!'}</div>
-                    <div class="score-breakdown">${breakdownHtml}</div>
+                    <div class="score-label">${scoreLabel}</div>
+                    <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin:16px 0 8px;">By Thinking Level</div>
+                    <div class="bloom-breakdown">${bloomHtml}</div>
+                    <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin:12px 0 8px;">Question Details</div>
+                    <div class="score-breakdown">${perQuestionHtml}</div>
                     <button class="quiz-continue-btn show" style="visibility:visible" onclick="finishQuiz()">Finish</button>
                     <button class="quiz-continue-btn show" style="visibility:visible; margin-top:10px; background: #f1f5f9; color: #0d9488; border: 2px solid #0d9488; box-shadow: none;" onclick="restartExperiment()">↺ Restart Experiment</button>
                 </div>
@@ -2060,7 +2330,7 @@
 
         function restartExperiment() {
             // 1. Close all overlays immediately
-            ['quizOverlay', 'quizReadyOverlay', 'conceptCardOverlay'].forEach(id => {
+            ['quizOverlay', 'quizReadyOverlay', 'conceptCardOverlay', 'formativeOverlay'].forEach(id => {
                 const el = document.getElementById(id);
                 el.classList.remove('active');
                 el.style.display = 'none';
@@ -2083,6 +2353,7 @@
                 endQuizIndex: 0,
                 endQuizScore: 0,
                 endQuizResults: [],
+                formativePredictions: [],
                 currentDistance: 999,
                 proximityTarget: 'none',
                 lastStepChangeTime: Date.now(),
@@ -2150,8 +2421,9 @@
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-                    <span style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Concept Check</span>
+                    <span style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Summative Assessment</span>
                 </div>
+                <div id="quizBloomBadge"></div>
                 <div id="quizProgressBar" class="quiz-progress-bar" style="display:none"></div>
                 <div id="quizQuestion" class="quiz-question">Loading question...</div>
                 <div id="quizOptions" class="options-grid"></div>
