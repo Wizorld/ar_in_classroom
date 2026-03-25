@@ -231,6 +231,25 @@
             color: #1e293b;
         }
 
+        #restartBtn {
+            position: absolute;
+            top: 20px;
+            right: 155px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #0d9488;
+            font-size: 0.9rem;
+        }
+
         #quizOverlay {
             position: fixed;
             top: 0;
@@ -663,6 +682,15 @@
 </head>
 
 <body>
+    <button id="restartBtn" onclick="restartExperiment()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+        </svg>
+        Restart
+    </button>
+
     <a href="index.html" class="back-btn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -1597,6 +1625,7 @@
                     <div class="score-label">${score === total ? 'Perfect score!' : score >= total / 2 ? 'Good effort!' : 'Keep exploring!'}</div>
                     <div class="score-breakdown">${breakdownHtml}</div>
                     <button class="quiz-continue-btn show" style="visibility:visible" onclick="finishQuiz()">Finish</button>
+                    <button class="quiz-continue-btn show" style="visibility:visible; margin-top:10px; background: #f1f5f9; color: #0d9488; border: 2px solid #0d9488; box-shadow: none;" onclick="restartExperiment()">↺ Restart Experiment</button>
                 </div>
             `;
         }
@@ -1608,6 +1637,110 @@
                 overlay.style.display = 'none';
                 experimentState.quizActive = false;
             }, 400);
+        }
+
+        function restartExperiment() {
+            // 1. Close all overlays immediately
+            ['quizOverlay', 'quizReadyOverlay', 'conceptCardOverlay'].forEach(id => {
+                const el = document.getElementById(id);
+                el.classList.remove('active');
+                el.style.display = 'none';
+            });
+
+            // 2. Reset experiment state
+            Object.assign(experimentState, {
+                temperature: 25,
+                isHeating: false,
+                isPotAttached: false,
+                isMixtureAttached: false,
+                isStickAttached: false,
+                thermiteIgnitionTimer: 0,
+                thermiteTriggered: false,
+                thermiteCompleted: false,
+                thermiteStartTime: 0,
+                quizActive: false,
+                currentQuizLevel: 0,
+                endQuizQuestions: [],
+                endQuizIndex: 0,
+                endQuizScore: 0,
+                endQuizResults: [],
+                currentDistance: 999,
+                proximityTarget: 'none',
+                lastStepChangeTime: Date.now(),
+                lastComputedStep: -1
+            });
+
+            // 3. Reset AR entities
+            document.getElementById('snappedPot').setAttribute('visible', 'false');
+            document.getElementById('potOriginalModel').setAttribute('visible', 'true');
+            document.getElementById('snappedStick').setAttribute('visible', 'false');
+            document.getElementById('stickOriginalModel').setAttribute('visible', 'true');
+            document.getElementById('mixtureOriginalModel').setAttribute('visible', 'true');
+            document.getElementById('sandBoxModel').setAttribute('animation-mixer', 'clip: Animation_1');
+            document.getElementById('snappedPotModel').setAttribute('animation-mixer',
+                'clip: Ceramicpot; loop: once; clampWhenFinished: true');
+
+            // 4. Reset thermite particle component
+            const thermiteEl = document.getElementById('thermiteEffect');
+            thermiteEl.setAttribute('thermite-reaction', 'active: false');
+            const comp = thermiteEl.components['thermite-reaction'];
+            if (comp) {
+                comp.reactionTime = 0;
+                comp.flashFired = false;
+                comp.coreMat.opacity = 0;
+                comp.haloMat.opacity = 0;
+                comp.coreMesh.scale.setScalar(0.001);
+                comp.haloMesh.scale.setScalar(0.001);
+                // Clear spark pool
+                comp.sAlive.fill(0);
+                comp.sFreeH = comp.S;
+                for (let i = 0; i < comp.S; i++) comp.sFree[i] = comp.S - 1 - i;
+                comp.aSpPos.fill(-200);
+                comp.sparkGeo.attributes.position.needsUpdate = true;
+                // Clear smoke pool
+                comp.smAlive.fill(0);
+                comp.smFreeH = comp.SM;
+                for (let i = 0; i < comp.SM; i++) comp.smFree[i] = comp.SM - 1 - i;
+                comp.aSmPos.fill(-200);
+                comp.smGeo.attributes.position.needsUpdate = true;
+            }
+
+            // 5. Reset AR pulse rings
+            if (_activeRingId) {
+                const prev = document.getElementById(_activeRingId);
+                if (prev) {
+                    prev.removeAttribute('animation__pulse');
+                    prev.setAttribute('visible', 'false');
+                }
+                _activeRingId = null;
+            }
+
+            // 6. Reset hint UI
+            document.getElementById('hintBtn').style.display = 'none';
+            const toast = document.getElementById('hintToast');
+            toast.classList.remove('show');
+            clearTimeout(_hintDismissTimer);
+
+            // 7. Rebuild quiz card DOM in case showQuizScore() replaced it
+            const quizCard = document.querySelector('.quiz-card');
+            quizCard.innerHTML = `
+                <div class="quiz-header">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                    </svg>
+                    <span style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Concept Check</span>
+                </div>
+                <div id="quizProgressBar" class="quiz-progress-bar" style="display:none"></div>
+                <div id="quizQuestion" class="quiz-question">Loading question...</div>
+                <div id="quizOptions" class="options-grid"></div>
+                <div id="quizFeedback" class="feedback-text"></div>
+                <div class="quiz-footer">
+                    <button id="quizContinueBtn" class="quiz-continue-btn" onclick="advanceEndQuiz()">Next Question</button>
+                </div>
+            `;
         }
 
         function animationLoop() {
