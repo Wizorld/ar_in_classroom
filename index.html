@@ -139,6 +139,31 @@
             color: #0d9488;
         }
 
+        .card-disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            filter: grayscale(1);
+            pointer-events: none;
+        }
+
+        .card-disabled .coming-soon-badge {
+            pointer-events: none;
+        }
+
+        .coming-soon-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: #e2e8f0;
+            color: #64748b;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            padding: 4px 10px;
+            border-radius: 20px;
+        }
+
         /* Outcome Popup Styles */
         #outcomePopup {
             position: fixed;
@@ -222,6 +247,29 @@
             align-items: center;
             gap: 1.5rem;
             margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .popup-close-btn {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #f1f5f9;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .popup-close-btn:hover {
+            background: #e2e8f0;
+            color: #1e293b;
         }
 
         .check-icon {
@@ -348,7 +396,8 @@
                     </svg></div>
             </div>
 
-            <div class="card" onclick="showOutcomes('plant-cell')">
+            <div class="card card-disabled">
+                <div class="coming-soon-badge">Coming Soon</div>
                 <div class="icon-box">
                     <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -368,7 +417,8 @@
                     </svg></div>
             </div>
 
-            <div class="card" onclick="showOutcomes('acid-base')">
+            <div class="card card-disabled">
+                <div class="coming-soon-badge">Coming Soon</div>
                 <div class="icon-box">
                     <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="2.5"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -399,6 +449,13 @@
                     </svg>
                 </div>
                 <h2>Learning Outcomes</h2>
+                <button class="popup-close-btn" onclick="closeOutcomes()" aria-label="Close">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
             <div class="popup-content-scroll">
                 <div class="aim-section">
@@ -443,6 +500,12 @@
             const popup = document.getElementById('outcomePopup');
             popup.style.display = 'flex';
             setTimeout(() => popup.classList.add('active'), 10);
+        }
+
+        function closeOutcomes() {
+            const popup = document.getElementById('outcomePopup');
+            popup.classList.remove('active');
+            setTimeout(() => { popup.style.display = 'none'; }, 400);
         }
 
         function continueToLab() {
