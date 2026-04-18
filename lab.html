@@ -193,6 +193,53 @@
             transition: width 0.1s linear;
         }
 
+        .proximity-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .proximity-track {
+            flex: 1;
+            height: 6px;
+            background: #f1f5f9;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .proximity-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #f59e0b, #0d9488);
+            border-radius: 3px;
+            transition: width 0.15s ease-out;
+        }
+
+        .proximity-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #0d9488;
+            white-space: nowrap;
+            min-width: 36px;
+            text-align: right;
+        }
+
+        .marker-lost-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            background: #fff7ed;
+            border: 1px solid #fed7aa;
+            border-radius: 10px;
+            padding: 8px 12px;
+            margin-top: 8px;
+            font-size: 0.78rem;
+            color: #9a3412;
+            line-height: 1.5;
+        }
+
+        .marker-lost-warning strong { color: #7c2d12; }
+
         .debug-item {
             margin: 4px 0;
             display: flex;
@@ -1462,8 +1509,8 @@
     <!-- Loading Screen -->
     <div id="loadingScreen">
         <div class="spinner"></div>
-        <h2>Preparing Laboratory...</h2>
-        <p>Calibrating AR sensors</p>
+        <h2>Almost Ready!</h2>
+        <p>Preparing your virtual lab...</p>
     </div>
 
     <!-- Debug Panel (hidden by default — toggle via DEV button) -->
@@ -3202,6 +3249,43 @@
                 </div>
             ` : '';
 
+            // Proximity bar — shown when a target marker is visible but not yet snapped
+            const needsProximity = s.proximityTarget && s.proximityTarget !== 'None' && s.proximityTarget !== 'none';
+            const markerVisible = s.currentDistance < 100;
+
+            // Marker lost detection
+            const mainLost = stepIndex >= 2 && stepIndex <= 4 && !s.activeMarkers.has('main') && !s.thermiteTriggered && !s.thermiteCompleted;
+            const targetLost = needsProximity && !markerVisible && s.activeMarkers.has('main');
+
+            let proximityHtml = '';
+            if (mainLost) {
+                proximityHtml = `
+                    <div class="marker-lost-warning">
+                        <span>⚠️</span>
+                        <span><strong>Main Station marker lost.</strong> Point your camera back at the Main Station marker card to restore tracking.</span>
+                    </div>`;
+            } else if (targetLost && !showFuse) {
+                proximityHtml = `
+                    <div class="marker-lost-warning">
+                        <span>⚠️</span>
+                        <span><strong>${s.proximityTarget} marker not detected.</strong> Point your camera at the ${s.proximityTarget} marker card to locate it, then bring it close.</span>
+                    </div>`;
+            } else if (needsProximity && markerVisible && !showFuse) {
+                const threshold = s.proximityThreshold;
+                const maxDist = threshold * 4;
+                const pct = Math.max(0, Math.min(100, Math.round((1 - (s.currentDistance - threshold) / (maxDist - threshold)) * 100)));
+                const proximityText = pct >= 80 ? 'Almost!' : pct >= 50 ? 'Getting closer' : 'Move closer';
+                proximityHtml = `
+                    <div class="proximity-row">
+                        <div class="proximity-track">
+                            <div class="proximity-fill" style="width:${pct}%"></div>
+                        </div>
+                        <span class="proximity-label">${pct}%</span>
+                    </div>
+                    <div style="font-size:0.7rem;color:#64748b;margin-top:2px">${proximityText} — bring the <strong>${s.proximityTarget}</strong> marker closer</div>
+                `;
+            }
+
             panel.innerHTML = `
                 <div class="instr-meta">
                     <span class="instr-step-label">${label}</span>
@@ -3209,6 +3293,7 @@
                 </div>
                 <div class="instr-text">${text}</div>
                 <div class="instr-sub">${sub}</div>
+                ${proximityHtml}
                 ${fuseHtml}
             `;
         }
