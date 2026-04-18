@@ -231,24 +231,7 @@
             color: #1e293b;
         }
 
-        #helpBtn {
-            position: absolute;
-            top: 20px;
-            right: 280px;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            color: #0369a1;
-            font-size: 0.9rem;
-        }
+        #helpBtn { color: #0369a1; }
 
         /* Instructions Overlay */
         #instructionsOverlay {
@@ -429,44 +412,36 @@
             filter: brightness(1.08);
         }
 
-        #restartBtn {
+        #topBarBtns {
             position: absolute;
             top: 20px;
-            right: 155px;
+            right: 20px;
             z-index: 100;
-            background: rgba(255, 255, 255, 0.9);
-            border: none;
-            padding: 10px 16px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
-            gap: 6px;
-            color: #0d9488;
-            font-size: 0.9rem;
+            gap: 10px;
         }
 
-        #downloadBtn {
-            position: absolute;
-            top: 20px;
-            right: 410px;
-            z-index: 100;
+        #topBarBtns button,
+        #topBarBtns a {
             background: rgba(255, 255, 255, 0.9);
             border: none;
             padding: 10px 16px;
             border-radius: 12px;
+            font-family: inherit;
             font-weight: 600;
+            font-size: 0.9rem;
             cursor: pointer;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             gap: 6px;
-            color: #7c3aed;
-            font-size: 0.9rem;
             text-decoration: none;
+            line-height: 1;
         }
+
+        #restartBtn { color: #0d9488; }
+        #downloadBtn { color: #7c3aed; }
 
         #quizOverlay {
             position: fixed;
@@ -1381,34 +1356,34 @@
         </div>
     </div>
 
-    <a id="downloadBtn" href="Assets/Exothermic reaction/thermite-reaction.pdf" download="thermite-reaction.pdf">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        Lab Sheet
-    </a>
-
-    <button id="helpBtn" onclick="showInstructions()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
-        How to Use
-    </button>
-
-    <button id="restartBtn" onclick="restartExperiment()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-        </svg>
-        Restart
-    </button>
+    <div id="topBarBtns">
+        <a id="downloadBtn" href="Assets/Exothermic reaction/thermite-reaction.pdf" download="thermite-reaction.pdf">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Lab Sheet
+        </a>
+        <button id="helpBtn" onclick="showInstructions()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+            </svg>
+            How to Use
+        </button>
+        <button id="restartBtn" onclick="restartExperiment()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+            </svg>
+            Restart
+        </button>
+    </div>
 
    
 
