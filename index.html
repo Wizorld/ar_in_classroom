@@ -241,6 +241,30 @@
             font-weight: 700;
         }
 
+        .aim-section {
+            background: #f0fdf4;
+            border-left: 4px solid #0d9488;
+            border-radius: 12px;
+            padding: 14px 18px;
+            margin-bottom: 2rem;
+        }
+
+        .aim-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: #0d9488;
+            margin-bottom: 6px;
+        }
+
+        .aim-text {
+            font-size: 1rem;
+            color: #1e3a2f;
+            line-height: 1.6;
+            margin: 0;
+        }
+
         .outcome-list {
             display: flex;
             flex-direction: column;
@@ -377,6 +401,10 @@
                 <h2>Learning Outcomes</h2>
             </div>
             <div class="popup-content-scroll">
+                <div class="aim-section">
+                    <div class="aim-label">Aim</div>
+                    <p id="aimText" class="aim-text"></p>
+                </div>
                 <div id="outcomeList" class="outcome-list"></div>
             </div>
             <button class="continue-btn" onclick="continueToLab()">Continue to Experiment</button>
@@ -385,6 +413,11 @@
 
     <script>
         let currentExperiment = '';
+        const aims = {
+            'exothermic-reaction': 'To investigate the thermite reaction through an AR simulation and understand the principles of exothermic redox reactions.',
+            'plant-cell': 'To explore the structure and function of a plant cell using an interactive AR model.',
+            'acid-base': 'To observe and analyse acid-base neutralisation reactions through guided AR experiments.'
+        };
         const outcomes = {
             'exothermic-reaction': [
                 'Explain why aluminium displaces iron by describing their relative positions on the reactivity series.',
@@ -398,6 +431,7 @@
 
         function showOutcomes(type) {
             currentExperiment = type;
+            document.getElementById('aimText').textContent = aims[type] || '';
             const list = document.getElementById('outcomeList');
             list.innerHTML = outcomes[type].map((text, i) => `
                 <div class="outcome-item">
