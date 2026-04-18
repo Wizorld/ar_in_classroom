@@ -483,6 +483,7 @@
             display: flex;
             flex-direction: column;
             overflow-y: auto;
+            position: relative;
         }
 
         #quizOverlay.active .quiz-card {
@@ -678,34 +679,37 @@
 
         /* Bloom's level badge */
         .bloom-badge {
+            position: absolute;
+            top: 20px;
+            right: 20px;
             display: inline-block;
             padding: 3px 10px;
             border-radius: 20px;
-            font-size: 0.68rem;
-            font-weight: 700;
+            font-size: 0.62rem;
+            font-weight: 500;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            margin-bottom: 14px;
+            letter-spacing: 0.06em;
+            opacity: 0.6;
         }
 
         .bloom-understand {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: #e0eaff;
+            color: #3b5bdb;
         }
 
         .bloom-apply {
-            background: #d1fae5;
-            color: #065f46;
+            background: #e6f9f0;
+            color: #2d7a57;
         }
 
         .bloom-analyze {
-            background: #fef3c7;
-            color: #92400e;
+            background: #fef9e7;
+            color: #b07c28;
         }
 
         .bloom-evaluate {
-            background: #ede9fe;
-            color: #5b21b6;
+            background: #f3eeff;
+            color: #6d40c4;
         }
 
         /* Formative Prediction Overlay */
@@ -1509,8 +1513,7 @@
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
                 <span
-                    style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Summative
-                    Assessment</span>
+                    style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Test Your Knowledge</span>
             </div>
             <div id="quizBloomBadge"></div>
             <div id="quizProgressBar" class="quiz-progress-bar" style="display:none"></div>
