@@ -448,6 +448,26 @@
             font-size: 0.9rem;
         }
 
+        #downloadBtn {
+            position: absolute;
+            top: 20px;
+            right: 410px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #7c3aed;
+            font-size: 0.9rem;
+            text-decoration: none;
+        }
+
         #quizOverlay {
             position: fixed;
             top: 0;
@@ -1361,6 +1381,16 @@
         </div>
     </div>
 
+    <a id="downloadBtn" href="Assets/Exothermic reaction/thermite-reaction.pdf" download="thermite-reaction.pdf">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Lab Sheet
+    </a>
+
     <button id="helpBtn" onclick="showInstructions()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
             stroke-linecap="round" stroke-linejoin="round">
@@ -1380,14 +1410,7 @@
         Restart
     </button>
 
-    <a href="index.html" class="back-btn">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 12H5"></path>
-            <polyline points="12 19 5 12 12 5"></polyline>
-        </svg>
-        Back to Menu
-    </a>
+   
 
     <!-- Lab Title -->
     <div
@@ -1415,7 +1438,7 @@
     <!-- AR Component Labels (2D HTML overlay, projected from 3D marker positions) -->
     <div id="arLabels">
         <div class="ar-label" id="label-main">
-            <div class="ar-label-title">Reaction Station</div>
+            <div class="ar-label-title">Main Station</div>
             <div class="ar-label-sub">Central Apparatus</div>
         </div>
         <div class="ar-label" id="label-heat">
