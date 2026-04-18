@@ -353,6 +353,48 @@
             line-height: 1.4;
         }
 
+        .marker-download-strip {
+            margin-top: 16px;
+            padding: 12px 14px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .marker-download-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #0d9488;
+        }
+
+        .marker-download-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .marker-dl-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            background: white;
+            border: 1px solid #6ee7b7;
+            border-radius: 8px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #065f46;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+
+        .marker-dl-btn:hover { background: #ecfdf5; }
+
         .inst-footer {
             padding: 16px 24px 20px;
             border-top: 1px solid #f1f5f9;
@@ -1223,6 +1265,29 @@
                                     <strong>Good Lighting</strong>
                                     <span>Avoid shadows falling directly on the markers</span>
                                 </div>
+                            </div>
+                        </div>
+                        <div class="marker-download-strip">
+                            <div class="marker-download-label">Download &amp; Print Marker Cards</div>
+                            <div class="marker-download-links">
+                                <a class="marker-dl-btn" href="Assets/Markers/Marker design.png" download="Marker-design.png">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    Marker Design
+                                </a>
+                                <a class="marker-dl-btn" href="Assets/Markers/Trump Cards Square.png" download="Trump-Cards-Square.png">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    Trump Cards Set 1
+                                </a>
+                                <a class="marker-dl-btn" href="Assets/Markers/Trump Cards Square 2.png" download="Trump-Cards-Square-2.png">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    Trump Cards Set 2
+                                </a>
                             </div>
                         </div>
                     </div>
