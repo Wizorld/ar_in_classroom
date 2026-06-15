@@ -1,0 +1,23 @@
+{
+  "imagePath": "Assets/ImageTargets/processed/mixture_luminance.png",
+  "metadata": null,
+  "name": "mixture",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 0,
+    "width": 480,
+    "height": 640,
+    "isRotated": false,
+    "originalWidth": 480,
+    "originalHeight": 640
+  },
+  "resources": {
+    "originalImage": "mixture_original.png",
+    "croppedImage": "mixture_cropped.png",
+    "thumbnailImage": "mixture_thumbnail.png",
+    "luminanceImage": "mixture_luminance.png"
+  },
+  "created": 1781522640381,
+  "updated": 1781522640381
+}

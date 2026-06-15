@@ -1,0 +1,202 @@
+================================================================================
+FORM TITLE: SME Review — AR Chemistry Lab (Thermite Reaction)
+================================================================================
+
+FORM DESCRIPTION:
+You are reviewing a prototype AR-based lab application designed to teach the
+thermite reaction to undergraduate chemistry students. Please explore the app
+for ~10 minutes before filling this form.
+
+App URL: [INSERT URL HERE]
+
+This review should take approximately 10–15 minutes. Your feedback will directly
+inform the next iteration of the tool. Thank you for your time.
+
+================================================================================
+SECTION 1: Respondent Profile
+================================================================================
+
+Q1 | Short answer | Required
+Your full name
+
+--------------------------------------------------------------------------------
+
+Q2 | Dropdown | Required
+Your primary role
+  - Chemistry Educator
+  - AR / EdTech Specialist
+  - Instructional Designer
+  - Lab Instructor
+  - Other
+
+--------------------------------------------------------------------------------
+
+Q3 | Dropdown | Required
+Years of teaching or domain experience
+  - Less than 2 years
+  - 2–5 years
+  - 5–10 years
+  - More than 10 years
+
+================================================================================
+SECTION 2: Content Accuracy
+[Section description: Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree)]
+================================================================================
+
+Q4 | Linear scale 1–5 | Required
+    Label 1: Strongly Disagree | Label 5: Strongly Agree
+The thermite reaction is depicted with scientific accuracy (correct reactants,
+products, and conditions).
+
+--------------------------------------------------------------------------------
+
+Q5 | Linear scale 1–5 | Required
+    Label 1: Strongly Disagree | Label 5: Strongly Agree
+The concept cards explain the chemistry at an appropriate level for
+undergraduate students.
+
+--------------------------------------------------------------------------------
+
+Q6 | Linear scale 1–5 | Required
+    Label 1: Strongly Disagree | Label 5: Strongly Agree
+The Bloom's taxonomy tags on learning outcomes match the actual cognitive
+demand of each activity.
+
+--------------------------------------------------------------------------------
+
+Q7 | Linear scale 1–5 | Required
+    Label 1: Strongly Disagree | Label 5: Strongly Agree
+The quiz questions accurately test understanding of the thermite reaction.
+
+--------------------------------------------------------------------------------
+
+Q8 | Paragraph | Optional
+Are there any factual errors or missing concepts you noticed?
+
+================================================================================
+SECTION 3: Pedagogical Design
+[Section description: Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree)]
+================================================================================
+
+Q9 | Linear scale 1–5 | Required
+    Label 1: Strongly Disagree | Label 5: Strongly Agree
+The predict-observe-explain flow is pedagogically appropriate for this topic.
+
+--------------------------------------------------------------------------------
+
+Q10 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+The sequence of experiment steps mirrors a real lab workflow.
+
+--------------------------------------------------------------------------------
+
+Q11 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+The formative (prediction) and summative (quiz) assessments are
+well-differentiated.
+
+--------------------------------------------------------------------------------
+
+Q12 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+The hint system supports student learning without giving away answers.
+
+--------------------------------------------------------------------------------
+
+Q13 | Paragraph | Optional
+What pedagogical improvements would you suggest?
+
+================================================================================
+SECTION 4: AR Interaction & Usability
+[Section description: Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree)]
+================================================================================
+
+Q14 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+The AR marker-based interaction feels intuitive for a classroom setting.
+
+--------------------------------------------------------------------------------
+
+Q15 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+The visual feedback (particle effects, 3D models) clearly communicates what
+is happening in the reaction.
+
+--------------------------------------------------------------------------------
+
+Q16 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+The instructions are clear enough for a student to set up and run the
+experiment independently.
+
+--------------------------------------------------------------------------------
+
+Q17 | Paragraph | Optional
+Were there any moments where you felt lost or confused while exploring the app?
+
+================================================================================
+SECTION 5: Classroom Feasibility
+[Section description: Rate each statement from 1 (Strongly Disagree) to 5 (Strongly Agree)]
+================================================================================
+
+Q18 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+This tool could realistically replace or supplement a physical thermite
+demonstration.
+
+--------------------------------------------------------------------------------
+
+Q19 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+A teacher could deploy this with minimal prior training on AR.
+
+--------------------------------------------------------------------------------
+
+Q20 | Linear scale 1–5 | Required
+     Label 1: Strongly Disagree | Label 5: Strongly Agree
+The session length and pacing are appropriate for a single class period (~50 min).
+
+--------------------------------------------------------------------------------
+
+Q21 | Multiple choice | Required
+How would you use this tool in your context?
+  - Primary instruction (replace physical lab entirely)
+  - Supplementary (alongside physical lab)
+  - Pre-lab preparation / flipped classroom
+  - Post-lab reinforcement
+  - Would not use in my context
+
+--------------------------------------------------------------------------------
+
+Q22 | Short answer | Optional
+Briefly explain your choice above.
+
+================================================================================
+SECTION 6: Overall Assessment
+================================================================================
+
+Q23 | Multiple choice | Required
+Overall, how would you rate the quality of this learning experience?
+  - Excellent
+  - Good
+  - Fair
+  - Poor
+
+--------------------------------------------------------------------------------
+
+Q24 | Paragraph | Required
+What are the top 2 strengths of this tool?
+
+--------------------------------------------------------------------------------
+
+Q25 | Paragraph | Required
+What are the top 2 changes you would prioritize before wider deployment?
+
+--------------------------------------------------------------------------------
+
+Q26 | Paragraph | Optional
+Any other comments or suggestions?
+
+================================================================================
+END OF FORM
+================================================================================

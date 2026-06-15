@@ -31,19 +31,26 @@ python -m http.server 8080
 ### Technology Stack
 
 - **A-Frame** — WebGL-based VR/AR scene graph
-- **AR.js** — Barcode marker tracking (physical markers → digital overlays)
+- **8th Wall XR Engine (open source)** — Image-target tracking (printed images → digital overlays). Loaded via CDN: `<script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" async crossorigin="anonymous" data-preload-chunks="slam">`. Can be self-hosted under `vendor/8thwall/` instead (see that folder's README). Replaced AR.js as of the image-tracking migration.
 - **Three.js** — Underlying 3D engine; also used directly for particle shaders
 - **Custom GLSL shaders** — Particle rendering (sparks, smoke, molten drips)
 
-### Marker-to-Object Mapping (`lab.html`)
+### Image-Target-to-Object Mapping (`lab.html`)
 
-AR.js barcode markers drive the experiment. Each marker ID maps to a physical prop:
-- `0` → Heat/Lighter (ignition source)
-- `1` → Ceramic Pot (container)
-- `2` → Sand Box (reagent container)
-- `4` → Mixture (Fe₂O₃ + Al powder)
-- `5` → Main Station (central apparatus)
-- `6` → Magnesium Stick (ignition medium)
+Printed image targets drive the experiment. The `IMAGE_TARGETS` config and the custom
+`image-target` A-Frame component map each target to a prop and re-dispatch legacy
+`markerFound`/`markerLost` events so the experiment state machine is unchanged. Source images:
+`Assets/ImageTargets/source/` (swappable — see that folder's README); processed engine targets:
+`Assets/ImageTargets/processed/`.
+
+| Image target | propId | Prop |
+|--------------|--------|------|
+| `heat-lighter` | heat | Heat/Lighter (ignition source) |
+| `ceramic-pot` | pot | Ceramic Pot (container) |
+| `sand-box` | sand | Sand Box (reagent container) |
+| `mixture` | mixture | Mixture (Fe₂O₃ + Al powder) |
+| `main-station` | main | Main Station (central apparatus) |
+| `magnesium-stick` | magnesium | Magnesium Stick (ignition medium) |
 
 ### Thermite Reaction State Machine (`lab.html`)
 
@@ -64,3 +71,9 @@ Right-side slide-in panel gating experiment progression. Questions defined in `q
 ### 3D Assets
 
 GLB models in `Assets/Exothermic reaction/`. Loaded via A-Frame's `gltf-model` component with animation mixer support.
+
+<!-- SPECKIT START -->
+For additional context about technologies to be used, project structure,
+shell commands, and other important information, read the current plan:
+`specs/001-image-tracking-migration/plan.md`
+<!-- SPECKIT END -->

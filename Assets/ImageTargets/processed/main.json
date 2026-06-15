@@ -1,0 +1,23 @@
+{
+  "imagePath": "Assets/ImageTargets/processed/main_luminance.png",
+  "metadata": null,
+  "name": "main",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 0,
+    "width": 480,
+    "height": 640,
+    "isRotated": false,
+    "originalWidth": 480,
+    "originalHeight": 640
+  },
+  "resources": {
+    "originalImage": "main_original.png",
+    "croppedImage": "main_cropped.png",
+    "thumbnailImage": "main_thumbnail.png",
+    "luminanceImage": "main_luminance.png"
+  },
+  "created": 1781522480743,
+  "updated": 1781522480743
+}

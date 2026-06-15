@@ -1,0 +1,23 @@
+{
+  "imagePath": "Assets/ImageTargets/processed/magnesium_luminance.png",
+  "metadata": null,
+  "name": "magnesium",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 0,
+    "width": 480,
+    "height": 640,
+    "isRotated": false,
+    "originalWidth": 480,
+    "originalHeight": 640
+  },
+  "resources": {
+    "originalImage": "magnesium_original.png",
+    "croppedImage": "magnesium_cropped.png",
+    "thumbnailImage": "magnesium_thumbnail.png",
+    "luminanceImage": "magnesium_luminance.png"
+  },
+  "created": 1781522406926,
+  "updated": 1781522406926
+}

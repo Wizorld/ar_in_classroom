@@ -1,0 +1,23 @@
+{
+  "imagePath": "Assets/ImageTargets/processed/heat_luminance.png",
+  "metadata": null,
+  "name": "heat",
+  "type": "PLANAR",
+  "properties": {
+    "left": 0,
+    "top": 0,
+    "width": 480,
+    "height": 640,
+    "isRotated": false,
+    "originalWidth": 480,
+    "originalHeight": 640
+  },
+  "resources": {
+    "originalImage": "heat_original.png",
+    "croppedImage": "heat_cropped.png",
+    "thumbnailImage": "heat_thumbnail.png",
+    "luminanceImage": "heat_luminance.png"
+  },
+  "created": 1781522294944,
+  "updated": 1781522294944
+}

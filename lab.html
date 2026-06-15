@@ -9,8 +9,11 @@
     <!-- A-Frame Library -->
     <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
 
-    <!-- AR.js with Marker Tracking Support -->
-    <script src="https://raw.githack.com/AR-js-org/AR.js/3.4.5/aframe/build/aframe-ar.js"></script>
+    <!-- 8th Wall open-source XR Engine (image tracking) via CDN.
+         data-preload-chunks="slam" is required for image targets.
+         To self-host instead, vendor xr.js + the SLAM chunk under vendor/8thwall/
+         and point src there — see vendor/8thwall/README.md. -->
+    <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" async crossorigin="anonymous" data-preload-chunks="slam"></script>
 
     <!-- Particle System Component -->
     <script
@@ -1293,53 +1296,71 @@
                         </div>
                         <div class="inst-items">
                             <div class="inst-item">
-                                <div class="inst-item-icon">🃏</div>
+                                <div class="inst-item-icon">🖼️</div>
                                 <div class="inst-item-text">
-                                    <strong>6 Printed Marker Cards</strong>
-                                    <span>Flat barcode cards — keep them unfolded on a surface</span>
+                                    <strong>6 Printed Image Targets</strong>
+                                    <span>Flat printed images — keep them unfolded on a surface</span>
                                 </div>
                             </div>
                             <div class="inst-item">
                                 <div class="inst-item-icon">📱</div>
                                 <div class="inst-item-text">
                                     <strong>Your Device</strong>
-                                    <span>Hold it steady — shaky hands cause markers to lose tracking</span>
+                                    <span>Hold it steady — shaky hands cause images to lose tracking</span>
                                 </div>
                             </div>
                             <div class="inst-item">
                                 <div class="inst-item-icon">💡</div>
                                 <div class="inst-item-text">
                                     <strong>Good Lighting</strong>
-                                    <span>Avoid shadows falling directly on the markers</span>
+                                    <span>Avoid shadows falling directly on the images</span>
                                 </div>
                             </div>
                         </div>
                         <div class="marker-download-strip">
-                            <div class="marker-download-label">Download &amp; Print Marker Cards</div>
+                            <div class="marker-download-label">Download &amp; Print Image Targets (one per prop)</div>
                             <div class="marker-download-links">
-                                <a class="marker-dl-btn" href="Assets/Markers/Marker design.png" download="Marker-design.png">
+                                <a class="marker-dl-btn" href="Assets/ImageTargets/source/main-station.png" download="main-station.png">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                                     </svg>
-                                    Marker Design
+                                    Main Station
                                 </a>
-                                <a class="marker-dl-btn" href="Assets/Markers/Trump Cards Square.png" download="Trump-Cards-Square.png">
+                                <a class="marker-dl-btn" href="Assets/ImageTargets/source/heat-lighter.png" download="heat-lighter.png">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                                     </svg>
-                                    Trump Cards Set 1
+                                    Heat / Lighter
                                 </a>
-                                <a class="marker-dl-btn" href="Assets/Markers/Trump Cards Square 2.png" download="Trump-Cards-Square-2.png">
+                                <a class="marker-dl-btn" href="Assets/ImageTargets/source/ceramic-pot.png" download="ceramic-pot.png">
                                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                                     </svg>
-                                    Trump Cards Set 2
+                                    Ceramic Pot
+                                </a>
+                                <a class="marker-dl-btn" href="Assets/ImageTargets/source/sand-box.png" download="sand-box.png">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    Sand Box
+                                </a>
+                                <a class="marker-dl-btn" href="Assets/ImageTargets/source/mixture.png" download="mixture.png">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    Mixture
+                                </a>
+                                <a class="marker-dl-btn" href="Assets/ImageTargets/source/magnesium-stick.png" download="magnesium-stick.png">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                                    </svg>
+                                    Magnesium Stick
                                 </a>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Slide 2: How Markers Work -->
+                    <!-- Slide 2: How Image Targets Work -->
                     <div class="inst-slide">
                         <div class="inst-slide-title">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -1347,21 +1368,21 @@
                                 <path d="M12 20h9" />
                                 <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
                             </svg>
-                            How Markers Work
+                            How Image Targets Work
                         </div>
                         <div class="inst-items">
                             <div class="inst-item">
                                 <div class="inst-item-icon">👁️</div>
                                 <div class="inst-item-text">
-                                    <strong>Point Camera at a Marker</strong>
+                                    <strong>Point Camera at an Image</strong>
                                     <span>A 3D object appears on top of it — that's your virtual lab equipment</span>
                                 </div>
                             </div>
                             <div class="inst-item">
                                 <div class="inst-item-icon">🔗</div>
                                 <div class="inst-item-text">
-                                    <strong>Bring Markers Close Together</strong>
-                                    <span>Placing two markers near each other triggers interactions (e.g. pot snaps to
+                                    <strong>Bring Images Close Together</strong>
+                                    <span>Placing two images near each other triggers interactions (e.g. pot snaps to
                                         station)</span>
                                 </div>
                             </div>
@@ -1389,14 +1410,14 @@
                                 <div class="inst-item-icon"
                                     style="background:#eff6ff; font-size:0.8rem; font-weight:700; color:#0d9488;">1
                                 </div>
-                                <div class="inst-item-text"><strong>Show the Main Station marker</strong><span>This
+                                <div class="inst-item-text"><strong>Show the Main Station image</strong><span>This
                                         anchors the experiment</span></div>
                             </div>
                             <div class="inst-item">
                                 <div class="inst-item-icon"
                                     style="background:#eff6ff; font-size:0.8rem; font-weight:700; color:#0d9488;">2
                                 </div>
-                                <div class="inst-item-text"><strong>Add the Ceramic Pot</strong><span>Bring its marker
+                                <div class="inst-item-text"><strong>Add the Ceramic Pot</strong><span>Bring its image
                                         close to the station</span></div>
                             </div>
                             <div class="inst-item">
@@ -1430,18 +1451,18 @@
                         <div class="inst-items">
                             <div class="inst-item">
                                 <div class="inst-item-icon">📐</div>
-                                <div class="inst-item-text"><strong>Keep markers flat on a surface</strong><span>Bent or
-                                        tilted cards lose tracking quickly</span></div>
+                                <div class="inst-item-text"><strong>Keep images flat on a surface</strong><span>Bent or
+                                        tilted prints lose tracking quickly</span></div>
                             </div>
                             <div class="inst-item">
                                 <div class="inst-item-icon">📏</div>
-                                <div class="inst-item-text"><strong>Hold device 30–50 cm above markers</strong><span>Too
+                                <div class="inst-item-text"><strong>Hold device 30–50 cm above images</strong><span>Too
                                         close or too far reduces detection accuracy</span></div>
                             </div>
                             <div class="inst-item">
                                 <div class="inst-item-icon">🔄</div>
-                                <div class="inst-item-text"><strong>Marker lost? Re-scan it</strong><span>Move the
-                                        device away then slowly back toward the marker</span></div>
+                                <div class="inst-item-text"><strong>Image lost? Re-scan it</strong><span>Move the
+                                        device away then slowly back toward the image</span></div>
                             </div>
                             <div class="inst-item">
                                 <div class="inst-item-icon">💬</div>
@@ -1638,8 +1659,8 @@
 
     <!-- A-Frame AR Scene -->
     <a-scene id="arScene" embedded
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3_PARITY65; sourceWidth:1280; sourceHeight:720; displayWidth: 1280; displayHeight: 720;"
-        vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true; 
+        xrweb
+        vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true;
         antialias: true; 
         alpha: true;
         powerPreference: high-performance;
@@ -1651,8 +1672,8 @@
             <!-- Models and textures can be preloaded here -->
         </a-assets>
 
-        <!-- MAIN MARKER (Hiro Pattern - represents the chemistry apparatus) -->
-        <a-marker id="mainMarker" type="barcode" value="5" emitevents="true" smooth="true" smoothCount="8">
+        <!-- MAIN IMAGE TARGET (main-station) - represents the chemistry apparatus -->
+        <a-entity id="mainMarker" image-target="name: main; prop: main">
             <a-entity id="mainContent" position="0 0 0" scale="1 1 1">
                 <a-entity id="snappedSandBox" visible="true" scale="0.5  0.5 0.5" position="0 0.5 0">
                     <a-entity id="sandBoxModel" gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"
@@ -1677,10 +1698,10 @@
                 <a-entity id="thermiteEffect" thermite-reaction="active: false" position="0.1 0.82 0"
                     scale="0.06 0.06 0.06"></a-entity>
             </a-entity>
-        </a-marker>
+        </a-entity>
 
-        <!-- EVENT MARKER 1: HEAT (Barcode 0) -->
-        <a-marker id="heatMarker" type="barcode" value="0" emitevents="true" smooth="true" smoothCount="8">
+        <!-- EVENT TARGET 1: HEAT (heat-lighter) -->
+        <a-entity id="heatMarker" image-target="name: heat; prop: heat">
             <a-cylinder position="0 -0.4 0" radius="0.8" height="0.02" color="#e2e8f0"
                 material="roughness: 0.8"></a-cylinder>
             <a-ring id="heatRing" radius-inner="0.75" radius-outer="0.95"
@@ -1690,10 +1711,10 @@
                 <a-entity gltf-model="Assets/Exothermic reaction/Lighter.glb" position="0 0 0"
                     animation-mixer="clip: Flame"></a-entity>
             </a-entity>
-        </a-marker>
+        </a-entity>
 
-        <!-- EVENT MARKER 2: POT (Barcode 1) -->
-        <a-marker id="potMarker" type="barcode" value="1" emitevents="true" smooth="true" smoothCount="8">
+        <!-- EVENT TARGET 2: POT (ceramic-pot) -->
+        <a-entity id="potMarker" image-target="name: pot; prop: pot">
             <a-cylinder position="0 -0.4 0" radius="0.8" height="0.02" color="#e2e8f0"
                 material="roughness: 0.8"></a-cylinder>
             <a-ring id="potRing" radius-inner="0.75" radius-outer="0.95"
@@ -1703,20 +1724,20 @@
                 <a-entity gltf-model="Assets/Exothermic reaction/Ceramic pot.glb" position="0 0 0"
                     animation-mixer="clip: Ceramicpot; loop: once; clampWhenFinished: true"></a-entity>
             </a-entity>
-        </a-marker>
+        </a-entity>
 
-        <!-- EVENT MARKER 3: REAGENT (Barcode 2) -->
-        <a-marker id="sandBoxMarker" type="barcode" value="2" emitevents="true" smooth="true" smoothCount="8">
+        <!-- EVENT TARGET 3: REAGENT / SAND BOX (sand-box) -->
+        <a-entity id="sandBoxMarker" image-target="name: sand; prop: sand">
             <a-cylinder position="0 -0.4 0" radius="0.8" height="0.02" color="#e2e8f0"
                 material="roughness: 0.8"></a-cylinder>
             <a-entity position="0 0 0" scale="5 5 5">
                 <a-entity gltf-model="Assets/Exothermic reaction/Sand inside square box.glb"
                     position="0 0 0"></a-entity>
             </a-entity>
-        </a-marker>
+        </a-entity>
 
-        <!-- EVENT MARKER 5: MIXTURE (Barcode 4) -->
-        <a-marker id="mixtureMarker" type="barcode" value="7" emitevents="true" smooth="true" smoothCount="8">
+        <!-- EVENT TARGET 5: MIXTURE Fe2O3 + Al (mixture) -->
+        <a-entity id="mixtureMarker" image-target="name: mixture; prop: mixture">
             <a-cylinder position="0 -0.4 0" radius="0.8" height="0.02" color="#e2e8f0"
                 material="roughness: 0.8"></a-cylinder>
             <a-ring id="mixtureRing" radius-inner="0.75" radius-outer="0.95"
@@ -1726,10 +1747,10 @@
                 <a-entity gltf-model="Assets/Exothermic reaction/Iron Oxide and Aluminium powder.glb"
                     position="0 0 0"></a-entity>
             </a-entity>
-        </a-marker>
+        </a-entity>
 
-        <!-- EVENT MARKER 6: MAGNESIUM STICK (Barcode 6) -->
-        <a-marker id="magnesiumStickMarker" type="barcode" value="6" emitevents="true" smooth="true" smoothCount="8">
+        <!-- EVENT TARGET 6: MAGNESIUM STICK (magnesium-stick) -->
+        <a-entity id="magnesiumStickMarker" image-target="name: magnesium; prop: magnesium">
             <a-cylinder position="0 -0.4 0" radius="0.8" height="0.02" color="#e2e8f0"
                 material="roughness: 0.8"></a-cylinder>
             <a-ring id="stickRing" radius-inner="0.75" radius-outer="0.95"
@@ -1738,7 +1759,7 @@
             <a-entity id="stickOriginalModel" position="0 0 0" scale="1 1 1">
                 <a-entity gltf-model="Assets/Exothermic reaction/Magnesium Stick.glb" position="0 0 0"></a-entity>
             </a-entity>
-        </a-marker>
+        </a-entity>
 
         <!-- Lighting (Improved PBR setup) -->
         <a-entity light="type: hemisphere; color: #ffffff; groundColor: #4b5563; intensity: 0.9"></a-entity>
@@ -1754,6 +1775,121 @@
     </a-scene>
 
     <script>
+        // ============================================================================
+        // 8th Wall image-tracking integration (replaces AR.js barcode markers).
+        // Each prop is bound to a printed image target. The `image-target` component
+        // listens to the engine's xrimagefound/updated/lost events and re-dispatches
+        // the legacy markerFound/markerLost events, so the existing experiment state
+        // machine, proximity feedback, and quiz gating keep working unchanged.
+        // See specs/001-image-tracking-migration/contracts/tracking-events.md
+        // ============================================================================
+
+        // name -> { prop, physicalWidthM }. The `name` (key) MUST match the "name" field in the
+        // processed target JSON and the file at Assets/ImageTargets/processed/<name>.json.
+        // The image-target-cli named the targets by propId, so name === prop here.
+        const IMAGE_TARGETS = {
+            'main':      { prop: 'main',      physicalWidthM: 0.15 },
+            'heat':      { prop: 'heat',      physicalWidthM: 0.15 },
+            'pot':       { prop: 'pot',       physicalWidthM: 0.15 },
+            'sand':      { prop: 'sand',      physicalWidthM: 0.15 },
+            'mixture':   { prop: 'mixture',   physicalWidthM: 0.15 },
+            'magnesium': { prop: 'magnesium', physicalWidthM: 0.15 }
+        };
+
+        // A-Frame component: anchors child content to a named 8th Wall image target.
+        AFRAME.registerComponent('image-target', {
+            schema: { name: { type: 'string' }, prop: { type: 'string' } },
+            init() {
+                this.el.object3D.visible = false; // hidden until the image is found (no stale content)
+                const scene = this.el.sceneEl;
+                const match = (e) => e.detail && e.detail.name === this.data.name;
+                this.onFound = (e) => {
+                    if (!match(e)) return;
+                    this._applyPose(e.detail);
+                    this.el.object3D.visible = true;
+                    this.el.emit('markerFound');   // legacy event — downstream logic unchanged
+                };
+                this.onUpdated = (e) => { if (match(e)) this._applyPose(e.detail); };
+                this.onLost = (e) => {
+                    if (!match(e)) return;
+                    this.el.object3D.visible = false; // hide within the same frame (FR-005, SC-003)
+                    this.el.emit('markerLost');
+                };
+                scene.addEventListener('xrimagefound', this.onFound);
+                scene.addEventListener('xrimageupdated', this.onUpdated);
+                scene.addEventListener('xrimagelost', this.onLost);
+            },
+            // Copy only position + rotation from the image (like an AR.js marker frame).
+            // Child models keep their authored scales, so we intentionally do NOT apply detail.scale.
+            _applyPose(d) {
+                if (d.position) this.el.object3D.position.copy(d.position);
+                if (d.rotation) this.el.object3D.quaternion.copy(d.rotation);
+            },
+            remove() {
+                const scene = this.el.sceneEl;
+                scene.removeEventListener('xrimagefound', this.onFound);
+                scene.removeEventListener('xrimageupdated', this.onUpdated);
+                scene.removeEventListener('xrimagelost', this.onLost);
+            }
+        });
+
+        // Configure the engine with the processed image targets and handle camera/engine
+        // failures by routing to the non-AR fallback (Constitution Principle V; FR-008/010).
+        function showArFallback(reason) {
+            console.warn('AR unavailable:', reason);
+            if (window.__arFallbackShown) return;
+            window.__arFallbackShown = true;
+            const el = document.createElement('div');
+            el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;' +
+                'align-items:center;justify-content:center;gap:18px;padding:32px;text-align:center;' +
+                'background:#0f172a;color:#f1f5f9;font-family:Segoe UI,sans-serif;';
+            el.innerHTML = '<div style="font-size:46px">📷</div>' +
+                '<h2 style="margin:0">AR camera unavailable</h2>' +
+                '<p style="max-width:420px;color:#cbd5e1">We could not start the camera or the AR engine on this device. ' +
+                'You can still run the experiment as a non-AR simulation.</p>' +
+                '<a href="thermite-staged.html" style="background:#10b981;color:#fff;padding:12px 22px;' +
+                'border-radius:10px;text-decoration:none;font-weight:600">Open non-AR simulation</a>';
+            document.body.appendChild(el);
+        }
+
+        function initImageTracking() {
+            const scene = document.getElementById('arScene');
+            // Engine failure / unsupported device / permission denial -> graceful fallback.
+            scene.addEventListener('camera-error', (e) => showArFallback(e.detail || 'camera-error'));
+            scene.addEventListener('xrextras-runtime-error', () => showArFallback('runtime-error'));
+
+            const configure = async () => {
+                if (!window.XR8 || !XR8.XrController) { showArFallback('XR8 engine not loaded'); return; }
+                // Activate image targets. The 8th Wall image-target-cli produces one metadata
+                // JSON per target (see Assets/ImageTargets/README.md), committed to
+                // Assets/ImageTargets/processed/<name>.json. A static page can't require() them,
+                // so we fetch + parse them and pass the array to configure().
+                const names = Object.keys(IMAGE_TARGETS);
+                const loaded = await Promise.all(names.map(async (n) => {
+                    try {
+                        const r = await fetch('Assets/ImageTargets/processed/' + n + '.json');
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        return await r.json();
+                    } catch (err) {
+                        console.warn('Image target not processed yet:', n, err.message);
+                        return null;
+                    }
+                }));
+                const imageTargetData = loaded.filter(Boolean);
+                if (!imageTargetData.length) {
+                    console.warn('No processed image targets found in Assets/ImageTargets/processed/. ' +
+                        'Run the image-target-cli — see Assets/ImageTargets/README.md.');
+                }
+                XR8.XrController.configure({ imageTargetData });
+            };
+            // XR8 may already be ready, or signal readiness via xrloaded/realityready.
+            if (window.XR8) { configure(); }
+            else { window.addEventListener('xrloaded', configure, { once: true }); }
+            // Safety net: if the engine never loads (e.g. xr.js missing), fall back.
+            setTimeout(() => { if (!window.XR8) showArFallback('engine load timeout'); }, 8000);
+        }
+        document.addEventListener('DOMContentLoaded', initImageTracking);
+
         const experimentState = {
             temperature: 25,
             isHeating: false,
@@ -3262,13 +3398,13 @@
                 proximityHtml = `
                     <div class="marker-lost-warning">
                         <span>⚠️</span>
-                        <span><strong>Main Station marker lost.</strong> Point your camera back at the Main Station marker card to restore tracking.</span>
+                        <span><strong>Main Station image lost.</strong> Point your camera back at the Main Station image to restore tracking.</span>
                     </div>`;
             } else if (targetLost && !showFuse) {
                 proximityHtml = `
                     <div class="marker-lost-warning">
                         <span>⚠️</span>
-                        <span><strong>${s.proximityTarget} marker not detected.</strong> Point your camera at the ${s.proximityTarget} marker card to locate it, then bring it close.</span>
+                        <span><strong>${s.proximityTarget} image not detected.</strong> Point your camera at the ${s.proximityTarget} image to locate it, then bring it close.</span>
                     </div>`;
             } else if (needsProximity && markerVisible && !showFuse) {
                 const threshold = s.proximityThreshold;

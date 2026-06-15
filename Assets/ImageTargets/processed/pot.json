@@ -1,0 +1,23 @@
+{
+  "imagePath": "Assets/ImageTargets/processed/pot_luminance.png",
+  "metadata": null,
+  "name": "pot",
+  "type": "PLANAR",
+  "properties": {
+    "top": 0,
+    "left": 0,
+    "width": 480,
+    "height": 640,
+    "isRotated": false,
+    "originalWidth": 480,
+    "originalHeight": 640
+  },
+  "resources": {
+    "originalImage": "pot_original.png",
+    "croppedImage": "pot_cropped.png",
+    "thumbnailImage": "pot_thumbnail.png",
+    "luminanceImage": "pot_luminance.png"
+  },
+  "created": 1781521981351,
+  "updated": 1781521981351
+}
