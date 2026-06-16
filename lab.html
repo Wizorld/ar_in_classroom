@@ -1770,8 +1770,8 @@
         <a-entity
             environment="preset: contact; dressing: none; lighting: none; skyType: none; ground: none; shadow: false; fog: 0"></a-entity>
 
-        <!-- Camera -->
-        <a-entity camera></a-entity>
+        <!-- Camera (8th Wall requires the <a-camera> primitive for AR) -->
+        <a-camera position="0 0 0"></a-camera>
     </a-scene>
 
     <script>
