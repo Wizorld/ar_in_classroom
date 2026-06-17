@@ -33,6 +33,10 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
+        /* Keep the AR canvas transparent so the 8th Wall camera feed shows through */
+        html, body { background: transparent; }
+        #arScene, #arScene .a-canvas, #arScene canvas { background: transparent !important; }
+
         #loadingScreen {
             position: fixed;
             top: 0;
@@ -1766,9 +1770,8 @@
         <a-entity light="type: directional; color: #FFF; intensity: 1.5" position="-1 3 1"></a-entity>
         <a-entity light="type: directional; color: #bbf7d0; intensity: 0.3" position="2 1 -2"></a-entity>
 
-        <!-- Environment Reflection (Uncommented and enabled to provide envMap for models, greatly improving metalness/roughness appearance) -->
-        <a-entity
-            environment="preset: contact; dressing: none; lighting: none; skyType: none; ground: none; shadow: false; fog: 0"></a-entity>
+        <!-- NOTE: the A-Frame `environment` component was removed for AR — it renders a
+             full sky/ground backdrop that occludes the 8th Wall camera passthrough. -->
 
         <!-- Camera (8th Wall requires the <a-camera> primitive for AR) -->
         <a-camera position="0 0 0"></a-camera>
