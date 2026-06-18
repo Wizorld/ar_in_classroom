@@ -6,14 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Science Lab Explorer - Laboratory</title>
 
-    <!-- A-Frame Library -->
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <!-- 8frame — 8th Wall's patched A-Frame (required so the camera feed composites
+         behind the scene; vanilla A-Frame clears the camera passthrough each frame). -->
+    <script crossorigin="anonymous" src="vendor/8thwall/8frame-1.5.0.min.js"></script>
 
     <!-- 8th Wall open-source XR Engine (image tracking) via CDN.
-         data-preload-chunks="slam" is required for image targets.
-         To self-host instead, vendor xr.js + the SLAM chunk under vendor/8thwall/
-         and point src there — see vendor/8thwall/README.md. -->
+         data-preload-chunks="slam" is required for image targets. -->
     <script src="https://cdn.jsdelivr.net/npm/@8thwall/engine-binary@1/dist/xr.js" async crossorigin="anonymous" data-preload-chunks="slam"></script>
+    <!-- xrextras: helper components (gesture detector, runtime-error, etc.) -->
+    <script src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js" crossorigin="anonymous"></script>
 
     <!-- Particle System Component -->
     <script
@@ -1663,10 +1664,12 @@
 
     <!-- A-Frame AR Scene -->
     <a-scene id="arScene" embedded
-        xrweb="allowedDevices: any"
+        xrextras-gesture-detector xrextras-runtime-error
+        xrweb="disableWorldTracking: true; allowedDevices: any"
         vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true;
-        antialias: true; 
+        antialias: true;
         alpha: true;
+        colorManagement: true;
         powerPreference: high-performance;
         physicallyCorrectLights: true;
         ">
