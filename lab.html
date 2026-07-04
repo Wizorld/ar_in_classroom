@@ -3,7 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Science Lab Explorer - Laboratory</title>
 
     <!-- 8frame — 8th Wall's patched A-Frame (required so the camera feed composites
@@ -16,23 +16,23 @@
     <!-- xrextras: helper components (gesture detector, runtime-error, etc.) -->
     <script src="https://cdn.jsdelivr.net/npm/@8thwall/xrextras@1/dist/xrextras.js" crossorigin="anonymous"></script>
 
-    <!-- Particle System Component -->
-    <script
-        src="https://cdn.jsdelivr.net/gh/c-frame/aframe-particle-system-component@master/dist/aframe-particle-system-component.min.js"></script>
-
     <!-- A-Frame Extras for Animation Mixer -->
     <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
-
-    <!-- A-Frame Environment Component for Reflections -->
-    <script
-        src="https://unpkg.com/aframe-environment-component@1.3.7/dist/aframe-environment-component.min.js"></script>
 
     <style>
         body {
             margin: 0;
             overflow: hidden;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            /* AR session hardening: no double-tap zoom, no pull-to-refresh,
+               no accidental text selection while gripping the phone */
+            touch-action: manipulation;
+            overscroll-behavior: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
+
+        input, textarea { -webkit-user-select: text; user-select: text; }
 
         /* Keep the AR canvas transparent so the 8th Wall camera feed shows through */
         html, body { background: transparent; }
@@ -80,6 +80,247 @@
 
         #loadingScreen p {
             color: #64748b;
+            max-width: 340px;
+            text-align: center;
+            line-height: 1.5;
+            margin: 0 24px;
+        }
+
+        /* Camera-permission priming gate (shown on the loading screen once the engine is ready) */
+        #startARBtn {
+            display: none;
+            margin-top: 26px;
+            padding: 16px 36px;
+            background: linear-gradient(90deg, #0d9488, #06b6d4);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 10px 24px rgba(6, 182, 212, 0.35);
+        }
+
+        #loadingCameraNote {
+            display: none;
+            margin-top: 18px;
+            background: #f0fdfa;
+            border: 1px solid #99f6e4;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.82rem;
+            color: #0f766e;
+            max-width: 320px;
+            line-height: 1.5;
+        }
+
+        /* Live equation strip shown during/after the reaction */
+        .equation-strip {
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #0f172a;
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #e2e8f0;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        .equation-strip .eq-fe {
+            color: #fbbf24;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.6);
+        }
+
+        .equation-strip .eq-heat { color: #f87171; }
+        .equation-strip .eq-al2o3 { color: #a5f3fc; }
+
+        /* Reaction thermometer */
+        .thermo-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
+        .thermo-track {
+            flex: 1;
+            height: 8px;
+            background: #f1f5f9;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .thermo-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #fbbf24, #f97316, #ef4444);
+            border-radius: 4px;
+        }
+
+        .thermo-melt-mark {
+            position: absolute;
+            top: -2px;
+            bottom: -2px;
+            left: 61%; /* 1538 of 2500 °C */
+            width: 2px;
+            background: #64748b;
+        }
+
+        .thermo-label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: #b45309;
+            min-width: 74px;
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .thermo-caption {
+            font-size: 0.68rem;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Live prediction checklist chips (during the reaction) */
+        #predictionChips {
+            position: fixed;
+            top: 84px;
+            left: 20px;
+            z-index: 300;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            pointer-events: none;
+            max-width: 240px;
+        }
+
+        .pred-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            background: rgba(15, 23, 42, 0.75);
+            color: #cbd5e1;
+            border-radius: 20px;
+            padding: 5px 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            backdrop-filter: blur(6px);
+            transition: all 0.4s ease;
+        }
+
+        .pred-chip .chip-mark {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            border: 1.5px solid #64748b;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+            color: transparent;
+        }
+
+        .pred-chip.hit {
+            color: #d1fae5;
+            background: rgba(6, 95, 70, 0.85);
+        }
+
+        .pred-chip.hit .chip-mark {
+            border-color: #34d399;
+            background: #10b981;
+            color: white;
+        }
+
+        /* Safety notice (instructions + reflection) */
+        .safety-note {
+            margin-top: 14px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 0.8rem;
+            color: #991b1b;
+            line-height: 1.5;
+        }
+
+        .safety-note strong { color: #7f1d1d; }
+
+        /* Neutral (real-life-only) reflection row */
+        .reflect-item-info {
+            background: #e0f2fe;
+            color: #075985;
+        }
+
+        /* Student name input on the quiz-ready card */
+        .student-name-row {
+            margin: 0 0 18px;
+            text-align: left;
+        }
+
+        .student-name-row label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .student-name-row input {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: #1e293b;
+        }
+
+        .student-name-row input:focus {
+            outline: none;
+            border-color: #06b6d4;
+        }
+
+        /* Score export row */
+        .export-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .export-btn {
+            flex: 1;
+            padding: 12px 10px;
+            background: #f0fdfa;
+            color: #0d9488;
+            border: 2px solid #99f6e4;
+            border-radius: 12px;
+            font-family: inherit;
+            font-size: 0.88rem;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        #csvFallback {
+            display: none;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px dashed #94a3b8;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-family: monospace;
+            color: #334155;
         }
 
         #debugPanel {
@@ -539,6 +780,19 @@
 
         #restartBtn { color: #0d9488; }
         #downloadBtn { color: #7c3aed; }
+        #muteBtn { color: #475569; }
+
+        /* Narrow portrait phones: collapse button labels to icons only */
+        @media (max-width: 560px) {
+            #topBarBtns { gap: 6px; }
+
+            #topBarBtns .btn-label { display: none; }
+
+            #topBarBtns button,
+            #topBarBtns a {
+                padding: 10px 12px;
+            }
+        }
 
         #quizOverlay {
             position: fixed;
@@ -1475,6 +1729,12 @@
                                         automatically after 30 seconds of no progress</span></div>
                             </div>
                         </div>
+                        <div class="safety-note">
+                            <span>⚠️</span>
+                            <span><strong>Safety first:</strong> real thermite burns at ~2,500&nbsp;°C and cannot be
+                                extinguished once lit. <strong>Never attempt this reaction outside a licensed
+                                industrial setting</strong> — that's exactly why you're doing it in AR.</span>
+                        </div>
                     </div>
 
                 </div>
@@ -1502,7 +1762,7 @@
                 <polyline points="7 10 12 15 17 10"></polyline>
                 <line x1="12" y1="15" x2="12" y2="3"></line>
             </svg>
-            Lab Sheet
+            <span class="btn-label">Lab Sheet</span>
         </a>
         <button id="helpBtn" onclick="showInstructions()">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -1511,15 +1771,18 @@
                 <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                 <line x1="12" y1="17" x2="12.01" y2="17"></line>
             </svg>
-            How to Use
+            <span class="btn-label">How to Use</span>
         </button>
-        <button id="restartBtn" onclick="restartExperiment()">
+        <button id="muteBtn" onclick="toggleMute()" aria-label="Toggle sound">
+            <span id="muteIcon">🔊</span>
+        </button>
+        <button id="restartBtn" onclick="confirmRestart()">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
                 <path d="M3 3v5h5"></path>
             </svg>
-            Restart
+            <span class="btn-label">Restart</span>
         </button>
     </div>
 
@@ -1532,11 +1795,14 @@
         </h1>
     </div>
 
-    <!-- Loading Screen -->
+    <!-- Loading Screen / camera-permission gate -->
     <div id="loadingScreen">
-        <div class="spinner"></div>
-        <h2>Almost Ready!</h2>
-        <p>Preparing your virtual lab...</p>
+        <div class="spinner" id="loadingSpinner"></div>
+        <h2 id="loadingTitle">Almost Ready!</h2>
+        <p id="loadingSub">Loading the 3D engine…</p>
+        <div id="loadingCameraNote">📷 Your browser will ask to use the <strong>camera</strong> — tap
+            <strong>Allow</strong> so the 3D lab can appear on your printed cards.</div>
+        <button id="startARBtn" onclick="startARSession()">Start the AR Lab</button>
     </div>
 
     <!-- Debug Panel (hidden by default — toggle via DEV button) -->
@@ -1578,6 +1844,9 @@
 
     <!-- Student Instruction Panel -->
     <div id="instructionPanel"></div>
+
+    <!-- Live prediction checklist (visible during the reaction) -->
+    <div id="predictionChips"></div>
 
     <!-- Hint Toast (auto-dismisses) -->
     <div id="hintToast"></div>
@@ -1631,9 +1900,14 @@
                 </svg>
             </div>
             <div class="quiz-ready-title">Well done! <br>You've completed the thermite reaction experiment.</div>
-            <div class="quiz-ready-sub"><br><br>Now it's
-                time to test your understanding. Answer <strong>7 questions</strong> across different thinking levels —
+            <div class="quiz-ready-sub">Now it's
+                time to test your understanding. Answer <strong><span id="quizQCount">7</span> questions</strong> across different thinking levels —
                 from understanding concepts to evaluating real-world applications.</div>
+            <div class="student-name-row">
+                <label for="studentNameInput">Your name (for your result card)</label>
+                <input id="studentNameInput" type="text" maxlength="60" placeholder="e.g. Priya S, Roll 23"
+                    autocomplete="off">
+            </div>
             <button class="quiz-ready-btn" onclick="startEndQuiz()">Begin Assessment</button>
         </div>
     </div>
@@ -1663,9 +1937,10 @@
     </div>
 
     <!-- A-Frame AR Scene -->
+    <!-- NOTE: the xrweb component is attached at runtime by startARSession() so the
+         camera permission prompt only appears after the student taps "Start the AR Lab". -->
     <a-scene id="arScene" embedded
         xrextras-gesture-detector xrextras-runtime-error
-        xrweb="disableWorldTracking: true; allowedDevices: any"
         vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true;
         antialias: true;
         alpha: true;
@@ -1802,6 +2077,11 @@
             'magnesium': { prop: 'magnesium', physicalWidthM: 0.15 }
         };
 
+        // Last detected scale per target (from xrimagefound/updated detail.scale).
+        // Distances between targets are normalized by this so proximity thresholds are
+        // expressed in "image widths" — independent of the engine's world units.
+        const targetScales = {};
+
         // A-Frame component: anchors child content to a named 8th Wall image target.
         AFRAME.registerComponent('image-target', {
             schema: { name: { type: 'string' }, prop: { type: 'string' } },
@@ -1830,6 +2110,7 @@
             _applyPose(d) {
                 if (d.position) this.el.object3D.position.copy(d.position);
                 if (d.rotation) this.el.object3D.quaternion.copy(d.rotation);
+                if (typeof d.scale === 'number' && d.scale > 0) targetScales[this.data.name] = d.scale;
             },
             remove() {
                 const scene = this.el.sceneEl;
@@ -1847,15 +2128,63 @@
             window.__arFallbackShown = true;
             const el = document.createElement('div');
             el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;flex-direction:column;' +
-                'align-items:center;justify-content:center;gap:18px;padding:32px;text-align:center;' +
+                'align-items:center;justify-content:center;gap:16px;padding:32px;text-align:center;' +
                 'background:#0f172a;color:#f1f5f9;font-family:Segoe UI,sans-serif;';
             el.innerHTML = '<div style="font-size:46px">📷</div>' +
                 '<h2 style="margin:0">AR camera unavailable</h2>' +
-                '<p style="max-width:420px;color:#cbd5e1">We could not start the camera or the AR engine on this device. ' +
-                'You can still run the experiment as a non-AR simulation.</p>' +
-                '<a href="thermite-staged.html" style="background:#10b981;color:#fff;padding:12px 22px;' +
-                'border-radius:10px;text-decoration:none;font-weight:600">Open non-AR simulation</a>';
+                '<p style="max-width:420px;color:#cbd5e1;margin:0">We could not start the camera or the AR engine on this device.</p>' +
+                '<p style="max-width:420px;color:#94a3b8;font-size:0.85rem;margin:0">If you blocked the camera by mistake: ' +
+                'tap the <strong>lock / ⓘ icon</strong> next to the address bar &rarr; Permissions &rarr; Camera &rarr; Allow, then try again.</p>' +
+                '<button onclick="location.reload()" style="background:#06b6d4;color:#fff;border:none;padding:12px 26px;' +
+                'border-radius:10px;font-weight:600;font-size:1rem;cursor:pointer;font-family:inherit">Try again</button>' +
+                '<a href="thermite-staged.html" style="background:transparent;color:#6ee7b7;border:1px solid #10b981;padding:11px 22px;' +
+                'border-radius:10px;text-decoration:none;font-weight:600">Open non-AR simulation instead</a>';
             document.body.appendChild(el);
+        }
+
+        // ── Gated AR session start ─────────────────────────────────────────────
+        // The camera must not start until the student taps "Start the AR Lab":
+        // the tap primes the permission prompt, and doubles as the user gesture
+        // that unlocks WebAudio and the screen wake lock.
+        const arSession = { engineReady: false, sceneReady: false, started: false, cameraRunning: false };
+
+        function _updateLoadingGate() {
+            if (arSession.started) return;
+            if (arSession.engineReady && arSession.sceneReady) {
+                document.getElementById('loadingSpinner').style.display = 'none';
+                document.getElementById('loadingTitle').textContent = 'Ready when you are!';
+                document.getElementById('loadingSub').textContent =
+                    'Keep your printed image cards flat on the desk in front of you.';
+                document.getElementById('loadingCameraNote').style.display = 'block';
+                document.getElementById('startARBtn').style.display = 'block';
+            }
+        }
+
+        function startARSession() {
+            if (arSession.started) return;
+            arSession.started = true;
+
+            // User-gesture-bound capabilities
+            labAudio.init();
+            requestWakeLock();
+
+            // Back to spinner while the camera starts / permission prompt is up
+            document.getElementById('loadingSpinner').style.display = 'block';
+            document.getElementById('startARBtn').style.display = 'none';
+            document.getElementById('loadingTitle').textContent = 'Starting camera…';
+            document.getElementById('loadingSub').textContent =
+                'If your browser asks for camera access, tap Allow.';
+
+            // Attaching xrweb now starts the 8th Wall camera pipeline.
+            const scene = document.getElementById('arScene');
+            scene.setAttribute('xrweb', 'disableWorldTracking: true; allowedDevices: any');
+        }
+
+        function _hideLoadingScreen() {
+            arSession.cameraRunning = true;
+            const ls = document.getElementById('loadingScreen');
+            ls.style.opacity = '0';
+            setTimeout(() => { ls.style.display = 'none'; }, 500);
         }
 
         function initImageTracking() {
@@ -1863,6 +2192,12 @@
             // Engine failure / unsupported device / permission denial -> graceful fallback.
             scene.addEventListener('camera-error', (e) => showArFallback(e.detail || 'camera-error'));
             scene.addEventListener('xrextras-runtime-error', () => showArFallback('runtime-error'));
+            // 8th Wall emits realityready when the camera feed is actually running —
+            // only then is it safe to drop the loading screen.
+            scene.addEventListener('realityready', _hideLoadingScreen);
+
+            if (scene.hasLoaded) { arSession.sceneReady = true; _updateLoadingGate(); }
+            else scene.addEventListener('loaded', () => { arSession.sceneReady = true; _updateLoadingGate(); }, { once: true });
 
             const configure = async () => {
                 if (!window.XR8 || !XR8.XrController) { showArFallback('XR8 engine not loaded'); return; }
@@ -1887,12 +2222,15 @@
                         'Run the image-target-cli — see Assets/ImageTargets/README.md.');
                 }
                 XR8.XrController.configure({ imageTargetData });
+                arSession.engineReady = true;
+                _updateLoadingGate();
             };
-            // XR8 may already be ready, or signal readiness via xrloaded/realityready.
+            // XR8 may already be ready, or signal readiness via xrloaded.
             if (window.XR8) { configure(); }
             else { window.addEventListener('xrloaded', configure, { once: true }); }
-            // Safety net: if the engine never loads (e.g. xr.js missing), fall back.
-            setTimeout(() => { if (!window.XR8) showArFallback('engine load timeout'); }, 8000);
+            // Safety net: if the engine never loads (e.g. xr.js missing / CDN blocked),
+            // surface the fallback instead of a spinner that never resolves.
+            setTimeout(() => { if (!window.XR8) showArFallback('engine load timeout'); }, 15000);
         }
         document.addEventListener('DOMContentLoaded', initImageTracking);
 
@@ -1903,22 +2241,167 @@
             isPotAttached: false,
             isMixtureAttached: false,
             isStickAttached: false,
-            proximityThreshold: 8.0,
-            currentDistance: 999,
+            // Proximity threshold in IMAGE WIDTHS (distance normalized by the main
+            // target's detected scale) — unit-independent, unlike the old AR.js value.
+            // Calibrate live via the DEV panel (?dev=1), which shows the normalized reading.
+            proximityThreshold: 2.2,
+            // Fallback threshold in raw engine units, used only until the main target's
+            // scale has been observed at least once.
+            proximityThresholdRaw: 0.35,
+            currentDistance: 999,   // normalized (image widths)
             proximityTarget: 'none',
             thermiteStartTime: 0, // Used for completion tracking
             thermiteIgnitionTimer: 0, // Added for heatmap application timer
             thermiteTriggered: false,
             thermiteCompleted: false,
+            reflectionQueued: false,
             quizActive: false,
             currentQuizLevel: 0,
             endQuizQuestions: [],
             endQuizIndex: 0,
             endQuizScore: 0,
             endQuizResults: [],
+            formativePredictions: [],
+            predictionStats: null,
             lastStepChangeTime: Date.now(),
             lastComputedStep: -1
         };
+
+        // ── Haptics ────────────────────────────────────────────────────────────
+        // Physical confirmation at snap/ignition moments, when students are looking
+        // at the desk rather than the screen. No-ops silently on iOS Safari.
+        function buzz(pattern) {
+            try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { }
+        }
+
+        // ── Screen wake lock ───────────────────────────────────────────────────
+        // The experiment has long hands-off stretches (18 s reaction, reading cards);
+        // a dimming screen kills camera tracking mid-run.
+        let _wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) _wakeLock = await navigator.wakeLock.request('screen');
+            } catch (e) { /* unsupported / low battery — degrade silently */ }
+        }
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible' && arSession.started) requestWakeLock();
+        });
+
+        // ── Synthesized audio (no downloads — classroom Wi-Fi friendly) ────────
+        // All sounds are generated with WebAudio: UI blips, snap clicks, and a
+        // phase-driven crackle/sizzle bed for the reaction itself.
+        const labAudio = {
+            ctx: null, master: null, noiseBuf: null,
+            reactionGain: null, reactionSrc: null, reactionFilter: null,
+            muted: localStorage.getItem('arlab_muted') === '1',
+
+            init() {
+                if (this.ctx) { this.ctx.resume(); return; }
+                try {
+                    const AC = window.AudioContext || window.webkitAudioContext;
+                    if (!AC) return;
+                    this.ctx = new AC();
+                    this.master = this.ctx.createGain();
+                    this.master.gain.value = this.muted ? 0 : 0.55;
+                    this.master.connect(this.ctx.destination);
+                    // 2-second white-noise buffer reused by every noise-based sound
+                    const len = this.ctx.sampleRate * 2;
+                    this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+                    const d = this.noiseBuf.getChannelData(0);
+                    for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+                } catch (e) { this.ctx = null; }
+            },
+
+            setMuted(m) {
+                this.muted = m;
+                try { localStorage.setItem('arlab_muted', m ? '1' : '0'); } catch (e) { }
+                if (this.master) this.master.gain.value = m ? 0 : 0.55;
+            },
+
+            // Short tonal blip — snaps, UI feedback
+            blip(freq, dur = 0.12, type = 'sine', vol = 0.5) {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = type; o.frequency.value = freq;
+                g.gain.setValueAtTime(vol, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                o.connect(g); g.connect(this.master);
+                o.start(t); o.stop(t + dur + 0.02);
+            },
+
+            snap() { this.blip(660, 0.09, 'triangle', 0.5); this.blip(990, 0.14, 'sine', 0.35); buzz(40); },
+            correct() { this.blip(523, 0.1); setTimeout(() => this.blip(784, 0.18), 90); },
+            incorrect() { this.blip(311, 0.16, 'square', 0.25); setTimeout(() => this.blip(233, 0.22, 'square', 0.22), 110); },
+            fanfare() {
+                [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => this.blip(f, 0.22, 'triangle', 0.45), i * 110));
+            },
+
+            // Ignition whoosh: bandpassed noise burst
+            ignite() {
+                if (!this.ctx) return;
+                const t = this.ctx.currentTime;
+                const src = this.ctx.createBufferSource();
+                src.buffer = this.noiseBuf;
+                const f = this.ctx.createBiquadFilter();
+                f.type = 'bandpass'; f.frequency.setValueAtTime(300, t);
+                f.frequency.exponentialRampToValueAtTime(3200, t + 0.5);
+                const g = this.ctx.createGain();
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(0.9, t + 0.12);
+                g.gain.exponentialRampToValueAtTime(0.001, t + 1.4);
+                src.connect(f); f.connect(g); g.connect(this.master);
+                src.start(t); src.stop(t + 1.5);
+            },
+
+            // Continuous sizzle bed while the reaction runs; intensity follows the phases
+            startReaction() {
+                if (!this.ctx || this.reactionSrc) return;
+                this.reactionSrc = this.ctx.createBufferSource();
+                this.reactionSrc.buffer = this.noiseBuf;
+                this.reactionSrc.loop = true;
+                this.reactionFilter = this.ctx.createBiquadFilter();
+                this.reactionFilter.type = 'bandpass';
+                this.reactionFilter.frequency.value = 2400;
+                this.reactionFilter.Q.value = 0.8;
+                this.reactionGain = this.ctx.createGain();
+                this.reactionGain.gain.value = 0;
+                this.reactionSrc.connect(this.reactionFilter);
+                this.reactionFilter.connect(this.reactionGain);
+                this.reactionGain.connect(this.master);
+                this.reactionSrc.start();
+                this._nextCrackle = 0;
+            },
+
+            // Called from the thermite tick with the current phase progress
+            reactionTick(phase, pp, fade) {
+                if (!this.ctx || !this.reactionGain) return;
+                const target = phase === 1 ? 0.8 : phase === 2 ? 0.55 - 0.2 * pp : 0.3 * fade;
+                this.reactionGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.1);
+                // Random spark crackles, denser at the peak
+                const density = phase === 1 ? 0.5 : phase === 2 ? 0.35 : 0.12 * fade;
+                if (Math.random() < density) {
+                    this.blip(1400 + Math.random() * 2600, 0.03 + Math.random() * 0.05, 'square', 0.1);
+                }
+            },
+
+            stopReaction() {
+                if (this.reactionSrc) {
+                    try {
+                        this.reactionGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.2);
+                        const src = this.reactionSrc;
+                        setTimeout(() => { try { src.stop(); } catch (e) { } }, 800);
+                    } catch (e) { }
+                    this.reactionSrc = null; this.reactionGain = null; this.reactionFilter = null;
+                }
+            }
+        };
+
+        function toggleMute() {
+            labAudio.setMuted(!labAudio.muted);
+            document.getElementById('muteIcon').textContent = labAudio.muted ? '🔇' : '🔊';
+        }
 
         // --- Thermite Particle System Component (1:1 Port from thermite-staged.html) ---
         AFRAME.registerComponent('thermite-reaction', {
@@ -2080,6 +2563,11 @@
 
             tick: function (t, dt) {
                 if (!this.data.active) return;
+                // Freeze the one-shot spectacle while an overlay is up or while the main
+                // image target is not tracked — a student who loses tracking (or reads a
+                // card) must not return to find the reaction silently finished.
+                if (experimentState.quizActive) return;
+                if (!experimentState.activeMarkers.has('main')) return;
                 const rawDt = Math.min(dt / 1000, 0.05);
                 this.reactionTime += rawDt;
                 const T = this.reactionTime;
@@ -2100,6 +2588,9 @@
                 if (ph === 3) {
                     globalParticleScale = Math.max(0.0, 1.0 - pp); // Shrinks from 1 to 0 during cooldown
                 }
+
+                // Sizzle/crackle bed follows the visual phases
+                labAudio.reactionTick(ph, pp, globalParticleScale);
 
                 // Handle total completion explicitly before phase logic
                 if (T >= this.P.totalTime) {
@@ -2226,21 +2717,10 @@
                 if (T >= this.P.totalTime && this.sFreeH === this.S && this.smFreeH === this.SM) {
                     this.el.setAttribute('visible', false);
                     this.el.setAttribute('thermite-reaction', 'active', false);
+                    labAudio.stopReaction();
                 }
             },
 
-            spawnEmber: function () {
-                if (this.sFreeH === 0) return;
-                const i = this.sFree[--this.sFreeH];
-                this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 1;
-                this.spx[i] = (Math.random() + Math.random() - 1) * 1.18 * .12;
-                this.spy[i] = 0.05 + Math.random() * 0.15;
-                this.spz[i] = (Math.random() + Math.random() - 1) * 1.18 * .12;
-                this.svx[i] = (Math.random() + Math.random() - 1) * 1.18 * .2;
-                this.svy[i] = 0.15 + Math.random() * 0.4;
-                this.svz[i] = (Math.random() + Math.random() - 1) * 1.18 * .2;
-                this.sLife[i] = 0; this.sMaxL[i] = 0.6 + Math.random() * 1.2;
-            },
             spawnIgnitionBurst: function (n) {
                 for (let s = 0; s < n; s++) {
                     if (this.sFreeH === 0) return;
@@ -2276,10 +2756,7 @@
                 }
             },
             spawnDrip: function () {
-                if (this.sFreeH === 0) {
-                    console.log("[DEBUG - Thermite] WARNING: Spark pool is completely exhausted! Cannot spawn drip.");
-                    return;
-                }
+                if (this.sFreeH === 0) return;
                 const i = this.sFree[--this.sFreeH];
                 this.sAlive[i] = 1; this.sSec[i] = 0; this.sBnc[i] = 0; this.sPhase[i] = 5;
                 const r = Math.random() * 0.5; // Keep drips tight to center
@@ -2291,9 +2768,6 @@
                 this.svy[i] = -1.0 - Math.random() * 2.0; // Fall slowly
                 this.svz[i] = (Math.random() - 0.5) * 0.2;
                 this.sLife[i] = 0; this.sMaxL[i] = 4.0 + Math.random() * 2.0;
-
-                // Unconditional log for aggressive debugging
-                console.log(`[DEBUG - Thermite] Molten Iron Drip Spawned! Local Y: ${this.spy[i].toFixed(2)} Target Y: -6.0 Size: ${this.sMaxL[i].toFixed(1)} FreeSlots: ${this.sFreeH}`);
             },
             spawnCooldown: function (n) {
                 for (let s = 0; s < n; s++) {
@@ -2353,15 +2827,17 @@
                 document.getElementById('labLabel').textContent = 'Titration Lab';
             }
 
-            const scene = document.getElementById('arScene');
-            scene.addEventListener('loaded', () => {
-                setTimeout(() => {
-                    document.getElementById('loadingScreen').style.opacity = '0';
-                    setTimeout(() => {
-                        document.getElementById('loadingScreen').style.display = 'none';
-                    }, 500);
-                }, 2000);
-            });
+            // NOTE: the loading screen is dismissed by the scene's `realityready`
+            // event (camera actually running) — see initImageTracking().
+
+            // Restore mute preference
+            document.getElementById('muteIcon').textContent = labAudio.muted ? '🔇' : '🔊';
+
+            // The DEV panel toggle is teacher tooling — only show it when the page is
+            // opened with ?dev=1 (usability report: students kept tapping it).
+            if (!params.has('dev')) {
+                document.getElementById('debugToggle').style.display = 'none';
+            }
 
             setupMarkerEventListeners();
             animationLoop();
@@ -2369,15 +2845,7 @@
 
         function setupMarkerEventListeners() {
             const mainMarker = document.getElementById('mainMarker');
-            mainMarker.addEventListener('markerFound', () => {
-                experimentState.activeMarkers.add('main');
-                // Trigger Thermite Reaction immediately for testing
-                if (!experimentState.thermiteTriggered) {
-                    console.log('🧪 TEST TRIGGER: Thermite Ignition');
-                    //experimentState.thermiteTriggered = true;
-                    //document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
-                }
-            });
+            mainMarker.addEventListener('markerFound', () => experimentState.activeMarkers.add('main'));
             mainMarker.addEventListener('markerLost', () => experimentState.activeMarkers.delete('main'));
 
             const heatMarker = document.getElementById('heatMarker');
@@ -2410,8 +2878,12 @@
             "Blue or green flames",
             "White powder residue forming"
         ];
-        // Indices of items that actually occur in the thermite reaction
-        const formativeCorrect = new Set([0, 1, 2, 3, 6]);
+        // Indices of items that actually occur AND are visible in the AR simulation.
+        // Index 6 (white Al₂O₃ residue) is chemically real but the simulation doesn't
+        // render it — it gets its own neutral category in the reflection instead of
+        // being graded, so students are never told they "missed" something invisible.
+        const formativeCorrect = new Set([0, 1, 2, 3]);
+        const FORMATIVE_REAL_LIFE_ONLY = 6;
 
         // Summative questions tagged by Bloom's level (7 total)
         const summativeQuestions = [
@@ -2465,15 +2937,15 @@
             },
             {
                 bloom: 'Analyze',
-                question: "Why does the thermite reaction release far more heat than a typical wood fire?",
+                question: "Why does the thermite reaction reach a far higher temperature than a wood fire?",
                 options: [
                     "It simply uses more material",
-                    "The Al–O bond in Al₂O₃ is much stronger than the Fe–O bond broken in Fe₂O₃, releasing a large net energy",
-                    "All metal reactions produce more heat than organic fires",
-                    "It burns faster, so heat accumulates without dissipating"
+                    "Its energy is released rapidly into a small mass of solid and liquid products, so the temperature soars",
+                    "All metal reactions burn hotter than organic fires",
+                    "Thermite stores more total energy per gram than wood does"
                 ],
                 correct: 1,
-                feedback: "Energy released equals the difference in bond energies. The Al–O bond is significantly stronger than Fe–O, so forming Al₂O₃ releases a large net amount of energy."
+                feedback: "Surprisingly, wood releases MORE energy per gram than thermite — but that energy spreads into hot gases and the surrounding air. Thermite dumps the large energy from forming strong Al–O bonds into a small mass of molten products almost at once, so the temperature climbs to around 2,500 °C."
             },
             {
                 bloom: 'Evaluate',
@@ -2498,6 +2970,18 @@
                 ],
                 correct: 2,
                 feedback: "The self-sustaining nature guarantees weld quality even in poor field conditions, but any setup error cannot be corrected mid-reaction — hence the strict safety protocols required."
+            },
+            {
+                bloom: 'Evaluate',
+                question: "You performed this thermite reaction in AR instead of a live demonstration. What is the strongest reason schools simulate it?",
+                options: [
+                    "Real thermite ingredients are too expensive for schools to buy",
+                    "The reaction is too slow to fit inside one class period",
+                    "It reaches ~2,500 °C, throws sparks and molten metal, and cannot be stopped once ignited — far too hazardous outside industrial settings",
+                    "The reaction only works at industrial scale, so a classroom version would fail"
+                ],
+                correct: 2,
+                feedback: "Cost and scale are not the issue — danger is. Molten iron at ~2,500 °C cannot be extinguished with water or standard extinguishers, so the reaction is only performed under licensed industrial conditions. AR lets you observe every detail with zero risk — never attempt it in real life."
             }
         ];
 
@@ -2516,7 +3000,7 @@
             },
             integration: {
                 title: "Products of Thermite",
-                body: "The reaction produces two things: aluminium oxide (a white powder) and molten iron at over 2500°C. That liquid iron is what makes thermite useful for welding railway tracks and making emergency repairs in the field."
+                body: "The reaction produces two things: aluminium oxide (a white powder) and molten iron — the reaction reaches around 2,500°C, well above iron's melting point of 1,538°C, which is why the iron comes out as a liquid. That liquid iron is what makes thermite useful for welding railway tracks and making emergency repairs in the field."
             }
         };
 
@@ -2543,9 +3027,14 @@
                 if (experimentState.pendingQuizPhase === 'setup') {
                     showFormative();
                 }
-                // After the last (integration) concept card → prediction reflection → summative assessment
-                else if (experimentState.thermiteCompleted) {
-                    showPredictionReflection();
+                // Post-reaction explain sequence: redox card → products card → assessment.
+                // (Both cards now come AFTER the reaction so no overlay ever blocks the
+                // 18-second spectacle — reflection on predictions runs first.)
+                else if (experimentState.pendingQuizPhase === 'reaction' && experimentState.thermiteCompleted) {
+                    showConceptCard('integration');
+                }
+                else if (experimentState.pendingQuizPhase === 'integration') {
+                    showQuizReady();
                 }
             }, 350);
         }
@@ -2595,6 +3084,50 @@
             }, 350);
         }
 
+        // ── Live prediction checklist ───────────────────────────────────────
+        // During the reaction, the student's own predictions float as chips and
+        // tick off the moment each becomes observable — closing the predict→observe
+        // loop in real time instead of only in the post-hoc reflection card.
+        const predictionChipConfig = {
+            0: { label: '💡 Bright light', hitAt: 0.1 },
+            1: { label: '💧 Molten drips', hitAt: 5.6 },
+            2: { label: '✨ Sparks', hitAt: 0.3 },
+            3: { label: '🔥 Intense heat', hitAt: 0.6 }
+            // 4 (gets cold), 5 (blue/green flames): never observed — stay unticked.
+            // 6 (white residue): real-life only, handled in the reflection card.
+        };
+
+        function showPredictionChips() {
+            const preds = experimentState.formativePredictions || [];
+            if (!preds.length) return;
+            const wrap = document.getElementById('predictionChips');
+            wrap.innerHTML = '<div style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:rgba(255,255,255,0.75);text-shadow:0 1px 3px rgba(0,0,0,0.6);">Your predictions</div>' +
+                preds.map(i => {
+                    const short = predictionChipConfig[i] ? predictionChipConfig[i].label : formativeItems[i];
+                    return `<div class="pred-chip" data-pred="${i}"><span class="chip-mark">✓</span><span>${short}</span></div>`;
+                }).join('');
+            wrap.style.display = 'flex';
+        }
+
+        function updatePredictionChips() {
+            const wrap = document.getElementById('predictionChips');
+            if (wrap.style.display !== 'flex') return;
+            const effectEl = document.getElementById('thermiteEffect');
+            const comp = effectEl && effectEl.components['thermite-reaction'];
+            if (!comp) return;
+            const T = comp.reactionTime;
+            wrap.querySelectorAll('.pred-chip:not(.hit)').forEach(chip => {
+                const cfg = predictionChipConfig[chip.dataset.pred];
+                if (cfg && T >= cfg.hitAt) chip.classList.add('hit');
+            });
+        }
+
+        function hidePredictionChips() {
+            const wrap = document.getElementById('predictionChips');
+            wrap.style.display = 'none';
+            wrap.innerHTML = '';
+        }
+
         // ── Prediction Reflection ────────────────────────────────────────────
         function showPredictionReflection() {
             const predictions = new Set(experimentState.formativePredictions);
@@ -2605,7 +3138,14 @@
                 const actual = formativeCorrect.has(i);
 
                 let cls, icon, label;
-                if (predicted && actual) {
+                if (i === FORMATIVE_REAL_LIFE_ONLY) {
+                    // Real chemistry, but the simulation doesn't render it — never graded.
+                    cls = 'reflect-item-info';
+                    icon = 'ℹ️';
+                    label = predicted
+                        ? 'Good chemistry! Al₂O₃ residue does form in real life — our simulation just doesn\'t show it, so it isn\'t counted.'
+                        : 'In real life, white aluminium-oxide residue also forms — our simulation doesn\'t show it.';
+                } else if (predicted && actual) {
                     cls = 'reflect-item-correct';
                     icon = '✓';
                     label = 'You predicted this — it happened!';
@@ -2632,6 +3172,7 @@
             }).join('');
 
             const total = formativeCorrect.size;
+            experimentState.predictionStats = { correct: correctCount, total };
             document.getElementById('reflectionSummary').innerHTML =
                 `You correctly predicted <strong>${correctCount} of ${total}</strong> observable outcomes. Here is how each one matched up:`;
             document.getElementById('reflectionItems').innerHTML = itemsHtml;
@@ -2648,17 +3189,29 @@
             setTimeout(() => {
                 overlay.style.display = 'none';
                 experimentState.quizActive = false;
-                showQuizReady();
+                // Observation reviewed — now explain the chemistry (redox → products)
+                showConceptCard('reaction');
             }, 350);
         }
 
         function showQuizReady() {
+            document.getElementById('quizQCount').textContent = summativeQuestions.length;
+            // Pre-fill the last-used name but always leave it editable — classroom
+            // devices are shared, so a silently reused name would misattribute scores.
+            try {
+                document.getElementById('studentNameInput').value = localStorage.getItem('ar_lab_student') || '';
+            } catch (e) { }
             const overlay = document.getElementById('quizReadyOverlay');
             overlay.style.display = 'flex';
             setTimeout(() => overlay.classList.add('active'), 10);
         }
 
         function startEndQuiz() {
+            // Capture the student's name for the result card / export
+            const nameInput = document.getElementById('studentNameInput');
+            experimentState.studentName = (nameInput && nameInput.value.trim()) || 'Anonymous';
+            try { localStorage.setItem('ar_lab_student', experimentState.studentName); } catch (e) { }
+
             // Close ready overlay
             const readyOverlay = document.getElementById('quizReadyOverlay');
             readyOverlay.classList.remove('active');
@@ -2695,13 +3248,22 @@
 
             document.getElementById('quizQuestion').textContent = quizy.question;
 
+            // Shuffle option display order (Fisher-Yates) so seat-neighbours can't share
+            // answer positions; perm maps display index -> original option index.
+            const perm = quizy.options.map((_, i) => i);
+            for (let i = perm.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [perm[i], perm[j]] = [perm[j], perm[i]];
+            }
+            s.currentOptionPerm = perm;
+
             const optionsContainer = document.getElementById('quizOptions');
             optionsContainer.innerHTML = '';
-            quizy.options.forEach((opt, i) => {
+            perm.forEach((origIdx, displayIdx) => {
                 const btn = document.createElement('button');
                 btn.className = 'option-btn';
-                btn.textContent = opt;
-                btn.onclick = () => handleAnswer(i);
+                btn.textContent = quizy.options[origIdx];
+                btn.onclick = () => handleAnswer(displayIdx);
                 optionsContainer.appendChild(btn);
             });
 
@@ -2715,25 +3277,30 @@
             setTimeout(() => overlay.classList.add('active'), 10);
         }
 
-        function handleAnswer(selectedIndex) {
+        function handleAnswer(displayIndex) {
             const s = experimentState;
             const quizy = s.endQuizQuestions[s.endQuizIndex];
             const feedbackEl = document.getElementById('quizFeedback');
             const options = document.querySelectorAll('.option-btn');
+            const perm = s.currentOptionPerm || quizy.options.map((_, i) => i);
 
             options.forEach(btn => btn.style.pointerEvents = 'none');
+            buzz(20);
 
-            const isCorrect = selectedIndex === quizy.correct;
+            // Map the tapped display position back to the authored option index
+            const isCorrect = perm[displayIndex] === quizy.correct;
             if (isCorrect) {
                 s.endQuizScore++;
-                options[selectedIndex].classList.add('correct');
+                options[displayIndex].classList.add('correct');
                 feedbackEl.textContent = "Correct! " + quizy.feedback;
                 feedbackEl.className = 'feedback-text show feedback-success';
+                labAudio.correct();
             } else {
-                options[selectedIndex].classList.add('incorrect');
-                options[quizy.correct].classList.add('correct');
+                options[displayIndex].classList.add('incorrect');
+                options[perm.indexOf(quizy.correct)].classList.add('correct');
                 feedbackEl.textContent = "Not quite — " + quizy.feedback;
                 feedbackEl.className = 'feedback-text show feedback-error';
+                labAudio.incorrect();
             }
             s.endQuizResults.push({ question: quizy.question, bloom: quizy.bloom, correct: isCorrect });
             document.getElementById('quizContinueBtn').classList.add('show');
@@ -2787,30 +3354,96 @@
                     </div>`;
                 }).join('');
 
-            // Save to localStorage
+            // Persist: keep the legacy single-slot key AND append to an attempt history
+            // so multiple students on a shared device don't overwrite each other.
             const saveData = {
+                name: s.studentName || 'Anonymous',
                 timestamp: new Date().toISOString(),
                 score, total,
                 bloomBreakdown: bloomTally,
+                predictions: s.predictionStats,
                 questions: s.endQuizResults
             };
-            try { localStorage.setItem('ar_lab_summative', JSON.stringify(saveData)); } catch (e) { }
+            try {
+                localStorage.setItem('ar_lab_summative', JSON.stringify(saveData));
+                const history = JSON.parse(localStorage.getItem('ar_lab_results') || '[]');
+                history.push(saveData);
+                localStorage.setItem('ar_lab_results', JSON.stringify(history.slice(-50)));
+            } catch (e) { }
 
             const scoreLabel = score === total ? 'Perfect score!' : score >= Math.ceil(total * 0.7) ? 'Well done!' : score >= Math.ceil(total / 2) ? 'Good effort!' : 'Keep exploring!';
+            const predLine = s.predictionStats
+                ? `<div style="font-size:0.85rem;color:#64748b;margin-top:2px;">Predictions: ${s.predictionStats.correct}/${s.predictionStats.total} observed outcomes foreseen</div>`
+                : '';
 
             const card = document.querySelector('.quiz-card');
             card.innerHTML = `
                 <div class="score-display">
+                    <div style="font-size:0.85rem;font-weight:700;color:#0d9488;margin-bottom:6px;">${escapeHtml(saveData.name)}</div>
                     <div class="score-number">${score}/${total}</div>
                     <div class="score-label">${scoreLabel}</div>
+                    ${predLine}
                     <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin:16px 0 8px;">By Thinking Level</div>
                     <div class="bloom-breakdown">${bloomHtml}</div>
                     <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin:12px 0 8px;">Question Details</div>
                     <div class="score-breakdown">${perQuestionHtml}</div>
+                    <div style="font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#94a3b8;margin:4px 0 8px;">Send Result to Your Teacher</div>
+                    <div class="export-row">
+                        <button class="export-btn" onclick="shareResult()">📤 Share</button>
+                        <button class="export-btn" onclick="copyResult(this)">📋 Copy</button>
+                    </div>
+                    <textarea id="csvFallback" rows="2" readonly onclick="this.select()"></textarea>
                     <button class="quiz-continue-btn show" style="visibility:visible" onclick="finishQuiz()">Finish</button>
                     <button class="quiz-continue-btn show" style="visibility:visible; margin-top:10px; background: #f1f5f9; color: #0d9488; border: 2px solid #0d9488; box-shadow: none;" onclick="restartExperiment()">↺ Restart Experiment</button>
                 </div>
             `;
+        }
+
+        function escapeHtml(str) {
+            const d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        // One-line CSV a student can paste into the class sheet / chat:
+        // name, time, score, total, per-Bloom, prediction accuracy
+        function buildResultCsv() {
+            const s = experimentState;
+            const raw = localStorage.getItem('ar_lab_summative');
+            if (!raw) return '';
+            const d = JSON.parse(raw);
+            const b = d.bloomBreakdown || {};
+            const cell = (l) => b[l] ? `${b[l].score}/${b[l].total}` : '-';
+            const pred = d.predictions ? `${d.predictions.correct}/${d.predictions.total}` : '-';
+            return [d.name, d.timestamp, `${d.score}/${d.total}`,
+                `Understand ${cell('Understand')}`, `Apply ${cell('Apply')}`,
+                `Analyze ${cell('Analyze')}`, `Evaluate ${cell('Evaluate')}`,
+                `Predictions ${pred}`].join(', ');
+        }
+
+        function shareResult() {
+            const text = 'AR Chemistry Lab result — ' + buildResultCsv();
+            if (navigator.share) {
+                navigator.share({ text }).catch(() => { });
+            } else {
+                copyResult(null);
+            }
+        }
+
+        function copyResult(btn) {
+            const text = buildResultCsv();
+            const done = () => { if (btn) { btn.textContent = '✓ Copied'; setTimeout(() => { btn.textContent = '📋 Copy'; }, 2000); } };
+            const fallback = () => {
+                // clipboard API needs a secure context (fails on plain-http LAN demos) —
+                // surface a selectable line the student can long-press-copy instead
+                const ta = document.getElementById('csvFallback');
+                ta.value = text;
+                ta.style.display = 'block';
+                ta.select();
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(done, fallback);
+            } else fallback();
         }
 
         function finishQuiz() {
@@ -2820,6 +3453,16 @@
                 overlay.style.display = 'none';
                 experimentState.quizActive = false;
             }, 400);
+        }
+
+        // Guard against mis-taps in the crowded top-right zone: only restart silently
+        // when there's no progress to lose.
+        function confirmRestart() {
+            const s = experimentState;
+            const hasProgress = s.isPotAttached || s.thermiteTriggered || s.endQuizIndex > 0;
+            if (!hasProgress || confirm('Restart the experiment? All progress will be lost.')) {
+                restartExperiment();
+            }
         }
 
         function restartExperiment() {
@@ -2841,6 +3484,7 @@
                 thermiteTriggered: false,
                 thermiteCompleted: false,
                 thermiteStartTime: 0,
+                reflectionQueued: false,
                 quizActive: false,
                 currentQuizLevel: 0,
                 endQuizQuestions: [],
@@ -2848,11 +3492,16 @@
                 endQuizScore: 0,
                 endQuizResults: [],
                 formativePredictions: [],
+                predictionStats: null,
                 currentDistance: 999,
                 proximityTarget: 'none',
                 lastStepChangeTime: Date.now(),
                 lastComputedStep: -1
             });
+
+            // Stop any lingering reaction audio and hide the prediction chips
+            labAudio.stopReaction();
+            hidePredictionChips();
 
             // 3. Reset AR entities
             document.getElementById('snappedPot').setAttribute('visible', 'false');
@@ -2867,6 +3516,9 @@
             // 4. Reset thermite particle component
             const thermiteEl = document.getElementById('thermiteEffect');
             thermiteEl.setAttribute('thermite-reaction', 'active: false');
+            // The tick hides the entity when a run completes — re-show it or the
+            // second run's reaction would be invisible.
+            thermiteEl.setAttribute('visible', 'true');
             const comp = thermiteEl.components['thermite-reaction'];
             if (comp) {
                 comp.reactionTime = 0;
@@ -2915,7 +3567,7 @@
                         <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
-                    <span style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Summative Assessment</span>
+                    <span style="font-weight: bold; text-transform: uppercase; letter-spacing: 0.1em; font-size: 0.8rem;">Test Your Knowledge</span>
                 </div>
                 <div id="quizBloomBadge"></div>
                 <div id="quizProgressBar" class="quiz-progress-bar" style="display:none"></div>
@@ -2928,141 +3580,158 @@
             `;
         }
 
+        // Scratch vectors — reused every frame instead of re-allocating
+        const _mainPos = new THREE.Vector3();
+        const _propPos = new THREE.Vector3();
+        let _lastFrameTime = 0;
+
+        // Distance between the main target and another tracked target, normalized by
+        // the main target's detected scale — i.e. measured in "image widths", which is
+        // independent of the engine's world units (the old AR.js threshold was not).
+        function normalizedDistanceTo(markerId) {
+            document.getElementById(markerId).object3D.getWorldPosition(_propPos);
+            const raw = _mainPos.distanceTo(_propPos);
+            const scale = targetScales['main'];
+            if (scale) return raw / scale;
+            // Scale not observed yet: map the raw-unit fallback threshold into "widths"
+            // so `norm < proximityThreshold` ⇔ `raw < proximityThresholdRaw`.
+            return raw / (experimentState.proximityThresholdRaw / experimentState.proximityThreshold);
+        }
+
         function animationLoop() {
-            // Pause all logic if quiz is active
-            if (experimentState.quizActive) {
-                requestAnimationFrame(animationLoop);
-                return;
+            const s = experimentState;
+            const now = performance.now();
+            const dt = _lastFrameTime ? Math.min((now - _lastFrameTime) / 1000, 0.1) : 0.016;
+            _lastFrameTime = now;
+
+            // Experiment logic pauses while an overlay is up; UI keeps updating so
+            // labels/panels never freeze in a stale position behind the overlay.
+            if (!s.quizActive) {
+
+                const mainMarker = document.getElementById('mainMarker');
+
+                if (s.activeMarkers.has('main')) {
+                    mainMarker.object3D.getWorldPosition(_mainPos);
+
+                    // Pot Snapping
+                    if (!s.isPotAttached) {
+                        s.proximityTarget = 'Pot';
+                        if (s.activeMarkers.has('pot')) {
+                            s.currentDistance = normalizedDistanceTo('potMarker');
+                            if (s.currentDistance < s.proximityThreshold) {
+                                s.isPotAttached = true;
+                                document.getElementById('snappedPot').setAttribute('visible', 'true');
+                                document.getElementById('potOriginalModel').setAttribute('visible', 'false');
+                                s.currentDistance = 999;
+                                labAudio.snap();
+                            }
+                        } else {
+                            s.currentDistance = 999;
+                        }
+                    }
+                    // Mixture Snapping
+                    else if (!s.isMixtureAttached) {
+                        s.proximityTarget = 'Mixture';
+                        if (s.activeMarkers.has('mixture')) {
+                            s.currentDistance = normalizedDistanceTo('mixtureMarker');
+                            if (s.currentDistance < s.proximityThreshold) {
+                                s.isMixtureAttached = true;
+                                document.getElementById('snappedPotModel').setAttribute('animation-mixer', "clip: IronOxideandAluminiumpowder; loop: once; clampWhenFinished: true");
+                                document.getElementById('mixtureOriginalModel').setAttribute('visible', 'false');
+                                s.currentDistance = 999;
+                                labAudio.snap();
+
+                                // Trigger Activation Quiz Pool
+                                setTimeout(() => showConceptCard('activation'), 2000);
+                            }
+                        } else {
+                            s.currentDistance = 999;
+                        }
+                    }
+                    // Stick Snapping
+                    else if (!s.isStickAttached) {
+                        s.proximityTarget = 'Stick';
+                        if (s.activeMarkers.has('stick')) {
+                            s.currentDistance = normalizedDistanceTo('magnesiumStickMarker');
+                            if (s.currentDistance < s.proximityThreshold) {
+                                s.isStickAttached = true;
+                                document.getElementById('snappedStick').setAttribute('visible', 'true');
+                                document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
+                                s.currentDistance = 999;
+                                labAudio.snap();
+
+                                // Trigger Setup Quiz Pool
+                                setTimeout(() => showConceptCard('setup'), 2000);
+                            }
+                        } else {
+                            s.currentDistance = 999;
+                        }
+                    } else {
+                        s.proximityTarget = 'None';
+                        s.currentDistance = 999;
+                    }
+
+                    // Handle Thermite Trigger (5 s continuous application of lighter,
+                    // measured in real time — not frames, which vary 30–120 Hz by device)
+                    if (s.isStickAttached && !s.thermiteTriggered) {
+                        if (s.activeMarkers.has('heat')) {
+                            s.thermiteIgnitionTimer += dt;
+
+                            if (s.thermiteIgnitionTimer >= 5.0) {
+                                s.thermiteTriggered = true;
+                                s.thermiteStartTime = Date.now(); // Set for completion tracking
+                                document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
+                                labAudio.ignite();
+                                labAudio.startReaction();
+                                buzz([30, 50, 30]);
+                                showPredictionChips();
+                                // The redox concept card now waits until AFTER the reaction —
+                                // nothing may cover the 18-second spectacle.
+                            }
+                        } else {
+                            // Lighter moved away: let the fuse cool down slowly rather than reset
+                            s.thermiteIgnitionTimer = Math.max(0, s.thermiteIgnitionTimer - dt * 0.6);
+                        }
+                    }
+
+                    // Handle Thermite Completion (18 s reaction, synced with the visual effect)
+                    if (s.thermiteTriggered && !s.thermiteCompleted) {
+                        const effectEl = document.getElementById('thermiteEffect');
+                        const reactionTime = effectEl && effectEl.components['thermite-reaction'] ? effectEl.components['thermite-reaction'].reactionTime : 0;
+                        if (reactionTime >= 18.0) {
+                            s.thermiteCompleted = true;
+                            document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation-4; loop: once; clampWhenFinished: true");
+                            labAudio.fanfare();
+                            buzz([50, 80, 50, 80, 120]);
+
+                            // Reflect on predictions first (observe → explain), then the
+                            // two concept cards, then the assessment (see dismiss handlers).
+                            if (!s.reflectionQueued) {
+                                s.reflectionQueued = true;
+                                setTimeout(() => { hidePredictionChips(); showPredictionReflection(); }, 2500);
+                            }
+                        }
+                    }
+                }
+
+                if (s.isHeating) {
+                    s.temperature = Math.min(s.temperature + 2, 100);
+                } else if (s.temperature > 25) {
+                    s.temperature = Math.max(s.temperature - 1, 25);
+                }
             }
 
-            const mainMarker = document.getElementById('mainMarker');
-
-            if (experimentState.activeMarkers.has('main')) {
-                const mainPos = new THREE.Vector3();
-                mainMarker.object3D.getWorldPosition(mainPos);
-
-
-                // Pot Snapping
-                if (!experimentState.isPotAttached) {
-                    experimentState.proximityTarget = 'Pot';
-                    if (experimentState.activeMarkers.has('pot')) {
-                        const potPos = new THREE.Vector3();
-                        document.getElementById('potMarker').object3D.getWorldPosition(potPos);
-                        const dist = mainPos.distanceTo(potPos);
-                        experimentState.currentDistance = dist;
-
-                        if (dist < experimentState.proximityThreshold) {
-                            experimentState.isPotAttached = true;
-                            document.getElementById('snappedPot').setAttribute('visible', 'true');
-                            document.getElementById('potOriginalModel').setAttribute('visible', 'false');
-                            experimentState.currentDistance = 999;
-                        }
-                    } else {
-                        experimentState.currentDistance = 999;
-                    }
-                }
-                // Mixture Snapping
-                else if (!experimentState.isMixtureAttached) {
-                    experimentState.proximityTarget = 'Mixture';
-                    if (experimentState.activeMarkers.has('mixture')) {
-                        const mixPos = new THREE.Vector3();
-                        document.getElementById('mixtureMarker').object3D.getWorldPosition(mixPos);
-                        const dist = mainPos.distanceTo(mixPos);
-                        experimentState.currentDistance = dist;
-
-                        if (dist < experimentState.proximityThreshold) {
-                            experimentState.isMixtureAttached = true;
-                            document.getElementById('snappedPotModel').setAttribute('animation-mixer', "clip: IronOxideandAluminiumpowder; loop: once; clampWhenFinished: true");
-                            document.getElementById('mixtureOriginalModel').setAttribute('visible', 'false');
-                            experimentState.currentDistance = 999;
-
-                            // Trigger Activation Quiz Pool
-                            setTimeout(() => showConceptCard('activation'), 2000);
-                        }
-                    } else {
-                        experimentState.currentDistance = 999;
-                    }
-                }
-                // Stick Snapping
-                else if (!experimentState.isStickAttached) {
-                    experimentState.proximityTarget = 'Stick';
-                    if (experimentState.activeMarkers.has('stick')) {
-                        const stickPos = new THREE.Vector3();
-                        document.getElementById('magnesiumStickMarker').object3D.getWorldPosition(stickPos);
-                        const dist = mainPos.distanceTo(stickPos);
-                        experimentState.currentDistance = dist;
-
-                        if (dist < experimentState.proximityThreshold) {
-                            experimentState.isStickAttached = true;
-                            document.getElementById('snappedStick').setAttribute('visible', 'true');
-                            document.getElementById('stickOriginalModel').setAttribute('visible', 'false');
-                            experimentState.currentDistance = 999;
-                            console.log('✅ Stick attached. Use lighter to ignite fuse (5s)');
-
-                            // Trigger Setup Quiz Pool
-                            setTimeout(() => showConceptCard('setup'), 2000);
-                        }
-                    } else {
-                        experimentState.currentDistance = 999;
-                    }
-                } else {
-                    experimentState.proximityTarget = 'None';
-                    experimentState.currentDistance = 999;
-                }
-
-                // Handle Thermite Trigger (5s continuous application of lighter)
-                if (experimentState.isStickAttached && !experimentState.thermiteTriggered) {
-                    if (experimentState.activeMarkers.has('heat')) {
-                        // Approximate dt as 16.6ms since we don't have it in animationLoop
-                        experimentState.thermiteIgnitionTimer += 0.0166;
-
-                        if (experimentState.thermiteIgnitionTimer >= 5.0) {
-                            console.log('💥 THERMITE IGNITION!');
-                            experimentState.thermiteTriggered = true;
-                            experimentState.thermiteStartTime = Date.now(); // Set for completion tracking
-                            document.getElementById('thermiteEffect').setAttribute('thermite-reaction', 'active: true');
-
-                            // Trigger Reaction Quiz Pool (Mid-reaction Check)
-                            setTimeout(() => showConceptCard('reaction'), 5000);
-                        }
-                    } else {
-                        // Reset timer if lighter is removed? 
-                        // Let's keep it for better UX, or let it decay slowly. 
-                        // Decaying slowly is a good middle ground.
-                        experimentState.thermiteIgnitionTimer = Math.max(0, experimentState.thermiteIgnitionTimer - 0.01);
-                    }
-                }
-
-                // Handle Thermite Completion (18s reaction after ignition, synced with visual effect)
-                if (experimentState.thermiteTriggered && !experimentState.thermiteCompleted) {
-                    const effectEl = document.getElementById('thermiteEffect');
-                    const reactionTime = effectEl && effectEl.components['thermite-reaction'] ? effectEl.components['thermite-reaction'].reactionTime : 0;
-                    if (reactionTime >= 18.0) {
-                        console.log('🏁 THERMITE REACTION COMPLETED');
-                        experimentState.thermiteCompleted = true;
-                        // Switch to Animation_2
-                        document.getElementById('sandBoxModel').setAttribute('animation-mixer', "clip: Animation-4; loop: once; clampWhenFinished: true");
-
-                        // Trigger Integration Quiz Pool (Final)
-                        setTimeout(() => showConceptCard('integration'), 5000);
-                    }
-                }
-            }
-
-            if (experimentState.isHeating) {
-                experimentState.temperature = Math.min(experimentState.temperature + 2, 100);
-            } else if (experimentState.temperature > 25) {
-                experimentState.temperature = Math.max(experimentState.temperature - 1, 25);
-            }
-
-            //document.getElementById('tempText').setAttribute('value', Math.round(experimentState.temperature) + '°C');
             updateDebugUI();
             updateInstructionPanel();
             updateARLabels();
+            updatePredictionChips();
             requestAnimationFrame(animationLoop);
         }
 
+        let _lastDebugHtml = '';
         function updateDebugUI() {
+            // Teacher tooling — skip entirely unless the panel is open
+            if (document.getElementById('debugPanel').style.display !== 'block') return;
             const content = document.getElementById('debugContent');
 
             const getStatus = (val) => val ? '<span class="status-ok">✔ COMPLETED</span>' : '<span class="status-wait">⌛ PENDING</span>';
@@ -3077,10 +3746,11 @@
                 return '<span class="status-wait">⌛ LOCKED</span>';
             };
 
-            content.innerHTML = `
+            const html = `
                 <div style="margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1)">
                     <div class="debug-item"><span>Main Anchor:</span> ${getTracking('main')}</div>
                     <div class="debug-item"><span>Lighter:</span> ${getTracking('heat')}</div>
+                    <div class="debug-item"><span>Main scale:</span> <span style="font-family:monospace">${(targetScales['main'] || 0).toFixed(3)}</span></div>
                 </div>
 
                 <div class="debug-item" style="font-weight:600; color:#e2e8f0; margin-bottom:4px;">PROGRESS</div>
@@ -3126,7 +3796,7 @@
                         <span style="font-family:monospace; font-size:18px; font-weight:bold; color:${experimentState.currentDistance < experimentState.proximityThreshold ? '#10b981' : '#f59e0b'}">
                             ${experimentState.currentDistance > 100 ? '---' : experimentState.currentDistance.toFixed(2)}
                         </span>
-                        <span style="font-size:11px; color:#64748b">/ ${experimentState.proximityThreshold} units</span>
+                        <span style="font-size:11px; color:#64748b">/ ${experimentState.proximityThreshold} image widths</span>
                     </div>
                     <div style="font-size:10px; color:#94a3b8; margin-top:4px;">
                         ${experimentState.activeMarkers.has(experimentState.proximityTarget.toLowerCase()) ?
@@ -3135,6 +3805,10 @@
                 </div>
                 ` : ''}
             `;
+            if (html !== _lastDebugHtml) {
+                _lastDebugHtml = html;
+                content.innerHTML = html;
+            }
         }
         // Maps step index → ring element ID and hint text
         const stepHints = [
@@ -3338,7 +4012,7 @@
             if (s.thermiteCompleted) {
                 overrideLabel = 'Complete!';
                 overrideText = 'Experiment complete. Molten iron has formed.';
-                overrideSub = 'The thermite reaction produced liquid iron at over 2500°C — the same process used to weld railway tracks.';
+                overrideSub = 'The reaction reached around 2,500°C — far above iron\'s 1,538°C melting point — producing liquid iron, the same process used to weld railway tracks. (Real thermite is extremely dangerous: never attempt this outside AR.)';
                 stepIndex = 5;
             } else if (s.thermiteTriggered) {
                 overrideLabel = 'Reaction Active';
@@ -3387,7 +4061,7 @@
 
             const fuseHtml = showFuse ? `
                 <div class="fuse-track">
-                    <div class="fuse-fill" style="width:${Math.min(fuseProgress * 100, 100)}%"></div>
+                    <div id="fuseFill" class="fuse-fill"></div>
                 </div>
             ` : '';
 
@@ -3398,37 +4072,65 @@
             // Marker lost detection
             const mainLost = stepIndex >= 2 && stepIndex <= 4 && !s.activeMarkers.has('main') && !s.thermiteTriggered && !s.thermiteCompleted;
             const targetLost = needsProximity && !markerVisible && s.activeMarkers.has('main');
+            // During the one-shot reaction the simulation freezes when tracking drops —
+            // tell the student it's paused, not broken.
+            const reactionPaused = s.thermiteTriggered && !s.thermiteCompleted && !s.activeMarkers.has('main');
 
             let proximityHtml = '';
-            if (mainLost) {
+            let warnKind = 'none';
+            if (reactionPaused) {
+                warnKind = 'paused';
+                proximityHtml = `
+                    <div class="marker-lost-warning">
+                        <span>⏸️</span>
+                        <span><strong>Reaction paused.</strong> Point your camera back at the Main Station image to keep watching.</span>
+                    </div>`;
+            } else if (mainLost) {
+                warnKind = 'mainlost';
                 proximityHtml = `
                     <div class="marker-lost-warning">
                         <span>⚠️</span>
                         <span><strong>Main Station image lost.</strong> Point your camera back at the Main Station image to restore tracking.</span>
                     </div>`;
             } else if (targetLost && !showFuse) {
+                warnKind = 'targetlost';
                 proximityHtml = `
                     <div class="marker-lost-warning">
                         <span>⚠️</span>
                         <span><strong>${s.proximityTarget} image not detected.</strong> Point your camera at the ${s.proximityTarget} image to locate it, then bring it close.</span>
                     </div>`;
             } else if (needsProximity && markerVisible && !showFuse) {
-                const threshold = s.proximityThreshold;
-                const maxDist = threshold * 4;
-                const pct = Math.max(0, Math.min(100, Math.round((1 - (s.currentDistance - threshold) / (maxDist - threshold)) * 100)));
-                const proximityText = pct >= 80 ? 'Almost!' : pct >= 50 ? 'Getting closer' : 'Move closer';
+                warnKind = 'proximity';
                 proximityHtml = `
                     <div class="proximity-row">
                         <div class="proximity-track">
-                            <div class="proximity-fill" style="width:${pct}%"></div>
+                            <div id="proxFill" class="proximity-fill"></div>
                         </div>
-                        <span class="proximity-label">${pct}%</span>
+                        <span id="proxPct" class="proximity-label"></span>
                     </div>
-                    <div style="font-size:0.7rem;color:#64748b;margin-top:2px">${proximityText} — bring the <strong>${s.proximityTarget}</strong> marker closer</div>
+                    <div style="font-size:0.7rem;color:#64748b;margin-top:2px"><span id="proxHint">Move closer</span> — bring the <strong>${s.proximityTarget}</strong> image closer</div>
                 `;
             }
 
-            panel.innerHTML = `
+            // Chemistry context during/after the reaction: the balanced equation plus a
+            // live temperature readout that quantifies "exothermic".
+            const showReactionStrips = s.thermiteTriggered || s.thermiteCompleted;
+            const reactionHtml = showReactionStrips ? `
+                <div class="equation-strip">Fe₂O₃ + 2Al → <span class="eq-fe">2Fe</span> + <span class="eq-al2o3">Al₂O₃</span> + <span class="eq-heat">heat</span></div>
+                <div class="thermo-row">
+                    <div class="thermo-track">
+                        <div id="thermoFill" class="thermo-fill"></div>
+                        <div class="thermo-melt-mark"></div>
+                    </div>
+                    <span id="thermoVal" class="thermo-label"></span>
+                </div>
+                <div class="thermo-caption">│ marks 1,538 °C — iron's melting point. That's why liquid iron drips out.</div>
+            ` : '';
+
+            // Rebuild the panel DOM only when its structure changes; per-frame values
+            // (bar widths, temperature) are patched onto the existing elements below —
+            // rebuilding every frame trashed layout AND killed the CSS bar transitions.
+            const skeleton = `
                 <div class="instr-meta">
                     <span class="instr-step-label">${label}</span>
                     <div class="instr-dots">${dotsHtml}</div>
@@ -3437,7 +4139,53 @@
                 <div class="instr-sub">${sub}</div>
                 ${proximityHtml}
                 ${fuseHtml}
+                ${reactionHtml}
             `;
+            const sig = stepIndex + '|' + label + '|' + text + '|' + sub + '|' + warnKind + '|' + showFuse + '|' + showReactionStrips + '|' + s.proximityTarget;
+            if (sig !== _panelSig) {
+                _panelSig = sig;
+                panel.innerHTML = skeleton;
+            }
+
+            // Per-frame dynamic patches
+            if (showFuse) {
+                const fuseFill = document.getElementById('fuseFill');
+                if (fuseFill) fuseFill.style.width = Math.min(fuseProgress * 100, 100) + '%';
+            }
+            if (warnKind === 'proximity') {
+                const threshold = s.proximityThreshold;
+                const maxDist = threshold * 4;
+                const pct = Math.max(0, Math.min(100, Math.round((1 - (s.currentDistance - threshold) / (maxDist - threshold)) * 100)));
+                const proxFill = document.getElementById('proxFill');
+                const proxPct = document.getElementById('proxPct');
+                const proxHint = document.getElementById('proxHint');
+                if (proxFill) proxFill.style.width = pct + '%';
+                if (proxPct) proxPct.textContent = pct + '%';
+                if (proxHint) proxHint.textContent = pct >= 80 ? 'Almost!' : pct >= 50 ? 'Getting closer' : 'Move closer';
+            }
+            if (showReactionStrips) {
+                updateThermometer();
+            }
+        }
+
+        let _panelSig = '';
+
+        // Maps the reaction clock to an indicative temperature so "exothermic" becomes
+        // a number students watch climb past iron's melting point.
+        function updateThermometer() {
+            const fill = document.getElementById('thermoFill');
+            const val = document.getElementById('thermoVal');
+            if (!fill || !val) return;
+            const comp = document.getElementById('thermiteEffect').components['thermite-reaction'];
+            const T = comp ? comp.reactionTime : 0;
+            let temp;
+            if (experimentState.thermiteCompleted) temp = 600;         // cooling slag
+            else if (T < 0.5) temp = 25 + (T / 0.5) * 2475;            // ignition spike
+            else if (T < 5) temp = 2500 - (T - 0.5) / 4.5 * 100;       // sustained peak
+            else temp = 2400 - (T - 5) / 13 * 1800;                    // cooldown
+            temp = Math.max(25, Math.min(2500, temp));
+            fill.style.width = (temp / 2500 * 100) + '%';
+            val.textContent = '≈ ' + Math.round(temp).toLocaleString('en-IN') + ' °C';
         }
     </script>
 </body>
