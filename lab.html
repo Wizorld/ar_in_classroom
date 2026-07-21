@@ -86,24 +86,8 @@
             margin: 0 24px;
         }
 
-        /* Camera-permission priming gate (shown on the loading screen once the engine is ready) */
-        #startARBtn {
-            display: none;
-            margin-top: 26px;
-            padding: 16px 36px;
-            background: linear-gradient(90deg, #0d9488, #06b6d4);
-            color: white;
-            border: none;
-            border-radius: 16px;
-            font-family: inherit;
-            font-size: 1.05rem;
-            font-weight: 700;
-            cursor: pointer;
-            box-shadow: 0 10px 24px rgba(6, 182, 212, 0.35);
-        }
-
         #loadingCameraNote {
-            display: none;
+            display: block;
             margin-top: 18px;
             background: #f0fdfa;
             border: 1px solid #99f6e4;
@@ -1795,14 +1779,13 @@
         </h1>
     </div>
 
-    <!-- Loading Screen / camera-permission gate -->
+    <!-- Loading Screen -->
     <div id="loadingScreen">
         <div class="spinner" id="loadingSpinner"></div>
         <h2 id="loadingTitle">Almost Ready!</h2>
         <p id="loadingSub">Loading the 3D engine…</p>
         <div id="loadingCameraNote">📷 Your browser will ask to use the <strong>camera</strong> — tap
             <strong>Allow</strong> so the 3D lab can appear on your printed cards.</div>
-        <button id="startARBtn" onclick="startARSession()">Start the AR Lab</button>
     </div>
 
     <!-- Debug Panel (hidden by default — toggle via DEV button) -->
@@ -1937,10 +1920,11 @@
     </div>
 
     <!-- A-Frame AR Scene -->
-    <!-- NOTE: the xrweb component is attached at runtime by startARSession() so the
-         camera permission prompt only appears after the student taps "Start the AR Lab". -->
+    <!-- xrweb must be present at scene-init for 8th Wall to bootstrap the camera
+         pipeline; attaching it late does not reliably start the feed. -->
     <a-scene id="arScene" embedded
         xrextras-gesture-detector xrextras-runtime-error
+        xrweb="disableWorldTracking: true; allowedDevices: any"
         vr-mode-ui="enabled: false" renderer="logarithmicDepthBuffer: true;
         antialias: true;
         alpha: true;
@@ -2142,62 +2126,48 @@
             document.body.appendChild(el);
         }
 
-        // ── Gated AR session start ─────────────────────────────────────────────
-        // The camera must not start until the student taps "Start the AR Lab":
-        // the tap primes the permission prompt, and doubles as the user gesture
-        // that unlocks WebAudio and the screen wake lock.
-        const arSession = { engineReady: false, sceneReady: false, started: false, cameraRunning: false };
+        // ── AR session bootstrap ───────────────────────────────────────────────
+        // xrweb is in the scene markup, so 8th Wall starts the camera at load (the
+        // only init sequence this build reliably bootstraps). The camera-permission
+        // prompt therefore appears at load. WebAudio + wake lock still need a user
+        // gesture, so they are unlocked on the first tap anywhere on the page.
+        const arSession = { started: false, cameraRunning: false, loadingHidden: false };
 
-        function _updateLoadingGate() {
-            if (arSession.started) return;
-            if (arSession.engineReady && arSession.sceneReady) {
-                document.getElementById('loadingSpinner').style.display = 'none';
-                document.getElementById('loadingTitle').textContent = 'Ready when you are!';
-                document.getElementById('loadingSub').textContent =
-                    'Keep your printed image cards flat on the desk in front of you.';
-                document.getElementById('loadingCameraNote').style.display = 'block';
-                document.getElementById('startARBtn').style.display = 'block';
-            }
-        }
-
-        function startARSession() {
-            if (arSession.started) return;
-            arSession.started = true;
-
-            // User-gesture-bound capabilities
-            labAudio.init();
-            requestWakeLock();
-
-            // Back to spinner while the camera starts / permission prompt is up
-            document.getElementById('loadingSpinner').style.display = 'block';
-            document.getElementById('startARBtn').style.display = 'none';
-            document.getElementById('loadingTitle').textContent = 'Starting camera…';
-            document.getElementById('loadingSub').textContent =
-                'If your browser asks for camera access, tap Allow.';
-
-            // Attaching xrweb now starts the 8th Wall camera pipeline.
-            const scene = document.getElementById('arScene');
-            scene.setAttribute('xrweb', 'disableWorldTracking: true; allowedDevices: any');
-        }
-
-        function _hideLoadingScreen() {
+        function _hideLoadingScreen(reason) {
+            if (arSession.loadingHidden || window.__arFallbackShown) return;
+            arSession.loadingHidden = true;
             arSession.cameraRunning = true;
+            console.log('[AR] hiding loading screen:', reason);
             const ls = document.getElementById('loadingScreen');
             ls.style.opacity = '0';
             setTimeout(() => { ls.style.display = 'none'; }, 500);
         }
+
+        // Unlock gesture-gated capabilities on first interaction (students always tap
+        // through the instructions / camera prompt).
+        function _unlockOnGesture() {
+            if (arSession.started) return;
+            arSession.started = true;
+            labAudio.init();
+            requestWakeLock();
+        }
+        document.addEventListener('pointerdown', _unlockOnGesture, { once: true });
+        document.addEventListener('touchstart', _unlockOnGesture, { once: true });
 
         function initImageTracking() {
             const scene = document.getElementById('arScene');
             // Engine failure / unsupported device / permission denial -> graceful fallback.
             scene.addEventListener('camera-error', (e) => showArFallback(e.detail || 'camera-error'));
             scene.addEventListener('xrextras-runtime-error', () => showArFallback('runtime-error'));
-            // 8th Wall emits realityready when the camera feed is actually running —
-            // only then is it safe to drop the loading screen.
-            scene.addEventListener('realityready', _hideLoadingScreen);
-
-            if (scene.hasLoaded) { arSession.sceneReady = true; _updateLoadingGate(); }
-            else scene.addEventListener('loaded', () => { arSession.sceneReady = true; _updateLoadingGate(); }, { once: true });
+            // Drop the loading screen as soon as the camera feed is running. Different
+            // 8th Wall builds emit different signals, so listen for all of them — plus
+            // a hard fallback below — rather than depending on a single event.
+            scene.addEventListener('realityready', () => _hideLoadingScreen('realityready'));
+            scene.addEventListener('camerastatuschange', (e) => {
+                if (e.detail && (e.detail.status === 'hasStream' || e.detail.status === 'hasVideo')) {
+                    _hideLoadingScreen('camerastatuschange:' + e.detail.status);
+                }
+            });
 
             const configure = async () => {
                 if (!window.XR8 || !XR8.XrController) { showArFallback('XR8 engine not loaded'); return; }
@@ -2222,15 +2192,25 @@
                         'Run the image-target-cli — see Assets/ImageTargets/README.md.');
                 }
                 XR8.XrController.configure({ imageTargetData });
-                arSession.engineReady = true;
-                _updateLoadingGate();
             };
             // XR8 may already be ready, or signal readiness via xrloaded.
             if (window.XR8) { configure(); }
             else { window.addEventListener('xrloaded', configure, { once: true }); }
-            // Safety net: if the engine never loads (e.g. xr.js missing / CDN blocked),
-            // surface the fallback instead of a spinner that never resolves.
-            setTimeout(() => { if (!window.XR8) showArFallback('engine load timeout'); }, 15000);
+
+            // Fallback dismissal: once the scene has loaded and the engine is present,
+            // reveal the camera feed even if no readiness event arrived (so a missing
+            // 'realityready' can never leave a permanent white screen).
+            const revealWhenReady = () => {
+                let waited = 0;
+                const iv = setInterval(() => {
+                    if (arSession.loadingHidden || window.__arFallbackShown) { clearInterval(iv); return; }
+                    waited += 500;
+                    if (window.XR8 && waited >= 2500) { _hideLoadingScreen('fallback-timer'); clearInterval(iv); }
+                    else if (waited >= 12000) { showArFallback('engine load timeout'); clearInterval(iv); }
+                }, 500);
+            };
+            if (scene.hasLoaded) revealWhenReady();
+            else scene.addEventListener('loaded', revealWhenReady, { once: true });
         }
         document.addEventListener('DOMContentLoaded', initImageTracking);
 
@@ -2827,8 +2807,8 @@
                 document.getElementById('labLabel').textContent = 'Titration Lab';
             }
 
-            // NOTE: the loading screen is dismissed by the scene's `realityready`
-            // event (camera actually running) — see initImageTracking().
+            // NOTE: the loading screen is dismissed by the camera-ready signals (or a
+            // hard fallback timer) wired up in initImageTracking().
 
             // Restore mute preference
             document.getElementById('muteIcon').textContent = labAudio.muted ? '🔇' : '🔊';
