@@ -35,8 +35,25 @@
         input, textarea { -webkit-user-select: text; user-select: text; }
 
         /* Keep the AR canvas transparent so the 8th Wall camera feed shows through */
-        html, body { background: transparent; }
+        html, body { background: transparent; height: 100%; }
         #arScene, #arScene .a-canvas, #arScene canvas { background: transparent !important; }
+
+        /* The scene is `embedded`, so it sizes to its parent rather than the viewport.
+           Every element on the page is positioned, so <body> collapses to 0 height and
+           the canvas (absolute, height:100% of a 0-height parent) renders nothing —
+           a blank screen even while the camera streams. Pin the scene to the viewport. */
+        #arScene {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh; /* avoids mobile URL-bar height jumps where supported */
+        }
+        #arScene .a-canvas, #arScene canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
 
         #loadingScreen {
             position: fixed;
